@@ -9,9 +9,25 @@ This module aims to be a full-featured Redis client for V
 To be implemented. There will be some great docs, but only once I get most of the basic stuff sorted out. For the time being I suggest you to take a look at the test files. They'll provide you with enough to get started.
 
 ## Features already working
-- GET `key`
-- SET `key` `value`
-- DEL `key`
+- GET
+- GETSET
+- TTL
+- PTTL
+- SET
+- SETEX
+- PSETEX
+- SETNX
+- INCR
+- INCRBY
+- INCRBYFLOAT
+- DECR
+- DECRBY
+- EXPIRE
+- PEXPIRE
+- EXPIREAT
+- PEXPIREAT
+- DEL
+- FLUSHALL
 
 ## Installation
 
