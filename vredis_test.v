@@ -17,8 +17,8 @@ fn test_set() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set('test', '123') == true
-	assert redis.set('test', '456') == true
+	assert redis.set('test 0', '123') == true
+	assert redis.set('test 0', '456') == true
 }
 
 fn test_set_opts() {
@@ -26,18 +26,18 @@ fn test_set_opts() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set_opts('test5', '123', vredis.SetOpts{
+	assert redis.set_opts('test 5', '123', vredis.SetOpts{
 		ex: 2
 	}) == true
-	assert redis.set_opts('test5', '456', vredis.SetOpts{
+	assert redis.set_opts('test 5', '456', vredis.SetOpts{
 		px: 2000
 		xx: true
 	}) == true
-	assert redis.set_opts('test5', '789', vredis.SetOpts{
+	assert redis.set_opts('test 5', '789', vredis.SetOpts{
 		px: 1000
 		nx: true
 	}) == false
-	// assert redis.set_opts('test5', '012', vredis.SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
+	// assert redis.set_opts('test 5', '012', vredis.SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
 }
 
 fn test_setex() {
@@ -45,7 +45,7 @@ fn test_setex() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.setex('test6', 2, '123') == true
+	assert redis.setex('test 6', 2, '123') == true
 }
 
 fn test_psetex() {
@@ -53,7 +53,7 @@ fn test_psetex() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.psetex('test7', 2000, '123') == true
+	assert redis.psetex('test 7', 2000, '123') == true
 }
 
 fn test_setnx() {
@@ -61,8 +61,8 @@ fn test_setnx() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.setnx('test8', '123') == 1
-	assert redis.setnx('test8', '456') == 0
+	assert redis.setnx('test 8', '123') == 1
+	assert redis.setnx('test 8', '456') == 0
 }
 
 fn test_get() {
@@ -70,13 +70,13 @@ fn test_get() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set('test2', '123') == true
-	r := redis.get('test2') or {
+	assert redis.set('test 2', '123') == true
+	r := redis.get('test 2') or {
 		assert false
 		return
 	}
 	assert r == '123'
-	assert _key_not_found(redis, 'test3') == true
+	assert _key_not_found(redis, 'test 3') == true
 }
 
 fn test_del() {
@@ -84,13 +84,13 @@ fn test_del() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set('test4', '123') == true
-	c := redis.del('test4') or {
+	assert redis.set('test 4', '123') == true
+	c := redis.del('test 4') or {
 		assert false
 		return
 	}
 	assert c == 1
-	assert _key_not_found(redis, 'test4') == true
+	assert _key_not_found(redis, 'test 4') == true
 }
 
 fn test_flushall() {
@@ -98,9 +98,9 @@ fn test_flushall() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set('test9', '123') == true
+	assert redis.set('test 9', '123') == true
 	assert redis.flushall() == true
-	assert _key_not_found(redis, 'test9') == true
+	assert _key_not_found(redis, 'test 9') == true
 }
 
 fn _key_not_found(redis vredis.Redis, key string) bool {

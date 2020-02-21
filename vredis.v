@@ -37,7 +37,7 @@ pub fn (r Redis) disconnect() {
 }
 
 pub fn (r Redis) set(key, value string) bool {
-	message := 'SET $key "$value"\r\n'
+	message := 'SET "$key" "$value"\r\n'
 	r.socket.write(message) or {
 		return false
 	}
@@ -56,7 +56,7 @@ pub fn (r Redis) set_opts(key, value string, opts SetOpts) bool {
 	ex := if opts.ex == -4 && opts.px == -4 { '' } else if opts.ex != -4 { ' EX $opts.ex' } else { ' PX $opts.px' }
 	nx := if opts.nx == false && opts.xx == false { '' } else if opts.nx == true { ' NX' } else { ' XX' }
 	keep_ttl := if opts.keep_ttl == false { '' } else { ' KEEPTTL' }
-	message := 'SET $key "$value"$ex$nx$keep_ttl\r\n'
+	message := 'SET "$key" "$value"$ex$nx$keep_ttl\r\n'
 	r.socket.write(message) or {
 		return false
 	}
@@ -91,7 +91,7 @@ pub fn (r Redis) setnx(key string, value string) int {
 }
 
 pub fn (r Redis) get(key string) ?string {
-	message := 'GET $key\r\n'
+	message := 'GET "$key"\r\n'
 	r.socket.write(message) or {
 		return error(err)
 	}
@@ -104,7 +104,7 @@ pub fn (r Redis) get(key string) ?string {
 }
 
 pub fn (r Redis) del(key string) ?int {
-	message := 'DEL $key\r\n'
+	message := 'DEL "$key"\r\n'
 	r.socket.write(message) or {
 		return error(err)
 	}
