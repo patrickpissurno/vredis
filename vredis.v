@@ -159,6 +159,15 @@ pub fn (r Redis) append(key string, value string) ?int {
 	return count
 }
 
+pub fn (r Redis) setrange(key string, offset int, value string) ?int {
+	message := 'SETRANGE "$key" $offset "$value"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	count := parse_int(r.socket.read_line())
+	return count
+}
+
 pub fn (r Redis) expire(key string, seconds int) ?int {
 	message := 'EXPIRE "$key" $seconds\r\n'
 	r.socket.write(message) or {
@@ -230,6 +239,20 @@ pub fn (r Redis) getset(key, value string) ?string {
 	res := r.socket.read_line()
 	len := parse_int(res)
 	if len == -1 {
+		return ''
+	}
+	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) getrange(key string, start, end int) ?string {
+	message := 'GETRANGE "$key" $start $end\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	len := parse_int(res)
+	if len == 0 {
+		r.socket.read_line()
 		return ''
 	}
 	return r.socket.read_line()[0..len]
@@ -378,14 +401,7 @@ pub fn (r Redis) flushall() bool {
 }
 
 fn parse_int(res string) int {
-	// could probably be written in a more efficient way
-	mut i := 0
-	for ; i < res.len; i++ {
-		if res[i] == `\r` {
-			break
-		}
-	}
-	sval := res[1..i]
+	sval := res[1..res.len - 2]
 	return strconv.atoi(sval)
 }
 

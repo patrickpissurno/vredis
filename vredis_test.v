@@ -208,6 +208,23 @@ fn test_append() {
 	assert r2 == 'bacon'
 }
 
+fn test_setrange() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.setrange('test 52', 0, 'bac') or {
+		assert false
+		return
+	}
+	assert r1 == 3
+	r2 := redis.setrange('test 52', 3, 'on') or {
+		assert false
+		return
+	}
+	assert r2 == 5
+}
+
 fn test_expire() {
 	redis := setup()
 	defer {
@@ -332,6 +349,24 @@ fn test_getset() {
 		return
 	}
 	assert r3 == '15'
+}
+
+fn test_getrange() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 50', 'community') == true
+	r1 := redis.getrange('test 50', 4, -1) or {
+		assert false
+		return
+	}
+	assert r1 == 'unity'
+	r2 := redis.getrange('test 51', 0, -1) or {
+		assert false
+		return
+	}
+	assert r2 == ''
 }
 
 fn test_randomkey() {

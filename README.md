@@ -11,6 +11,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 ## Features already working
 - GET
 - GETSET
+- GETRANGE
 - RANDOMKEY
 - EXISTS
 - TYPE
@@ -25,6 +26,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 - INCRBY
 - INCRBYFLOAT
 - APPEND
+- SETRANGE
 - DECR
 - DECRBY
 - EXPIRE
