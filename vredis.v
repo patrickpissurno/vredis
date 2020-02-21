@@ -71,6 +71,25 @@ pub fn (r Redis) set_opts(key, value string, opts SetOpts) bool {
 	}
 }
 
+pub fn (r Redis) setex(key string, seconds int, value string) bool {
+	return r.set_opts(key, value, SetOpts{
+		ex: seconds
+	})
+}
+
+pub fn (r Redis) psetex(key string, millis int, value string) bool {
+	return r.set_opts(key, value, SetOpts{
+		px: millis
+	})
+}
+
+pub fn (r Redis) setnx(key string, value string) int {
+	res := r.set_opts(key, value, SetOpts{
+		nx: true
+	})
+	return if res == true { 1 } else { 0 }
+}
+
 pub fn (r Redis) get(key string) ?string {
 	message := 'GET $key\r\n'
 	r.socket.write(message) or {
@@ -92,6 +111,22 @@ pub fn (r Redis) del(key string) ?int {
 	response := r.socket.read_line()
 	count := parse_len(response)
 	return count
+}
+
+pub fn (r Redis) flushall() bool {
+	message := 'FLUSHALL\r\n'
+	r.socket.write(message) or {
+		return false
+	}
+	res := r.socket.read_line()[0..3]
+	match res {
+		'+OK' {
+			return true
+		}
+		else {
+			return false
+		}
+	}
 }
 
 fn parse_len(res string) int {

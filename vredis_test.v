@@ -8,6 +8,7 @@ fn setup() vredis.Redis {
 }
 
 fn cleanup(redis vredis.Redis) {
+	redis.flushall()
 	redis.disconnect()
 }
 
@@ -25,10 +26,43 @@ fn test_set_opts() {
 	defer {
 		cleanup(redis)
 	}
-	assert redis.set_opts('test5', '123', vredis.SetOpts{ ex: 2 }) == true
-	assert redis.set_opts('test5', '456', vredis.SetOpts{ px: 2000, xx: true }) == true
-	assert redis.set_opts('test5', '789', vredis.SetOpts{ px: 1000, nx: true }) == false
+	assert redis.set_opts('test5', '123', vredis.SetOpts{
+		ex: 2
+	}) == true
+	assert redis.set_opts('test5', '456', vredis.SetOpts{
+		px: 2000
+		xx: true
+	}) == true
+	assert redis.set_opts('test5', '789', vredis.SetOpts{
+		px: 1000
+		nx: true
+	}) == false
 	// assert redis.set_opts('test5', '012', vredis.SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
+}
+
+fn test_setex() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.setex('test6', 2, '123') == true
+}
+
+fn test_psetex() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.psetex('test7', 2000, '123') == true
+}
+
+fn test_setnx() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.setnx('test8', '123') == 1
+	assert redis.setnx('test8', '456') == 0
 }
 
 fn test_get() {
@@ -57,6 +91,16 @@ fn test_del() {
 	}
 	assert c == 1
 	assert _key_not_found(redis, 'test4') == true
+}
+
+fn test_flushall() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test9', '123') == true
+	assert redis.flushall() == true
+	assert _key_not_found(redis, 'test9') == true
 }
 
 fn _key_not_found(redis vredis.Redis, key string) bool {
