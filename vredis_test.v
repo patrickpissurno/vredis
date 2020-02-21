@@ -262,6 +262,24 @@ fn test_pexpireat() {
 	assert r2 == 1
 }
 
+fn test_persist() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.persist('test 46') or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.setex('test 46', 2, '123') == true
+	r2 := redis.persist('test 46') or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
 fn test_get() {
 	redis := setup()
 	defer {
@@ -273,7 +291,7 @@ fn test_get() {
 		return
 	}
 	assert r == '123'
-	assert _key_not_found(redis, 'test 3') == true
+	assert _get_key_not_found(redis, 'test 3') == true
 }
 
 fn test_getset() {
@@ -296,6 +314,21 @@ fn test_getset() {
 		return
 	}
 	assert r3 == '15'
+}
+
+fn test_randomkey() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert _randomkey_database_empty(redis) == true
+	assert redis.set('test 47', '123') == true
+	r2 := redis.randomkey() or {
+		assert false
+		return
+	}
+	assert r2 == 'test 47'
+	assert _get_key_not_found(redis, 'test 3') == true
 }
 
 fn test_ttl() {
@@ -393,7 +426,7 @@ fn test_del() {
 		return
 	}
 	assert c == 1
-	assert _key_not_found(redis, 'test 4') == true
+	assert _get_key_not_found(redis, 'test 4') == true
 }
 
 fn test_rename() {
@@ -443,12 +476,24 @@ fn test_flushall() {
 	}
 	assert redis.set('test 9', '123') == true
 	assert redis.flushall() == true
-	assert _key_not_found(redis, 'test 9') == true
+	assert _get_key_not_found(redis, 'test 9') == true
 }
 
-fn _key_not_found(redis vredis.Redis, key string) bool {
+fn _get_key_not_found(redis vredis.Redis, key string) bool {
 	redis.get(key) or {
 		if (err == 'key not found') {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+	return false
+}
+
+fn _randomkey_database_empty(redis vredis.Redis) bool {
+	redis.randomkey() or {
+		if (err == 'database is empty') {
 			return true
 		}
 		else {

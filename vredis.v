@@ -190,6 +190,16 @@ pub fn (r Redis) pexpireat(key string, millistimestamp i64) ?int {
 	return count
 }
 
+pub fn (r Redis) persist(key string) ?int {
+	message := 'PERSIST "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
+}
+
 pub fn (r Redis) get(key string) ?string {
 	message := 'GET "$key"\r\n'
 	r.socket.write(message) or {
@@ -212,6 +222,19 @@ pub fn (r Redis) getset(key, value string) ?string {
 	len := parse_int(res)
 	if len == -1 {
 		return ''
+	}
+	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) randomkey() ?string {
+	message := 'RANDOMKEY\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	len := parse_int(res)
+	if len == -1 {
+		return error('database is empty')
 	}
 	return r.socket.read_line()[0..len]
 }

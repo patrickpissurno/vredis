@@ -11,6 +11,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 ## Features already working
 - GET
 - GETSET
+- RANDOMKEY
 - EXISTS
 - TYPE
 - TTL
@@ -28,6 +29,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 - PEXPIRE
 - EXPIREAT
 - PEXPIREAT
+- PERSIST
 - DEL
 - RENAME
 - RENAMENX
