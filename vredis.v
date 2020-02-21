@@ -20,6 +20,17 @@ pub struct SetOpts {
 	keep_ttl bool=false
 }
 
+pub enum KeyType {
+	t_none
+	t_string
+	t_list
+	t_set
+	t_zset
+	t_hash
+	t_stream
+	t_unknown
+}
+
 // https://github.com/v-community/learn_v_in_y_minutes/blob/master/learnv.v
 // https://github.com/vlang/v/blob/master/vlib/net/socket_test.v
 // https://redis.io/topics/protocol
@@ -225,12 +236,85 @@ pub fn (r Redis) pttl(key string) ?int {
 	return count
 }
 
+pub fn (r Redis) exists(key string) ?int {
+	message := 'EXISTS "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
+}
+
+pub fn (r Redis) type_of(key string) ?KeyType {
+	message := 'TYPE "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	return match res[1..res.len - 2] {
+		'none'{
+			KeyType.t_none
+		}
+		'string'{
+			KeyType.t_string
+		}
+		'list'{
+			KeyType.t_list
+		}
+		'set'{
+			KeyType.t_set
+		}
+		'zset'{
+			KeyType.t_zset
+		}
+		'hash'{
+			KeyType.t_hash
+		}
+		'stream'{
+			KeyType.t_stream
+		}
+		else {
+			.t_unknown}
+	}
+}
+
 pub fn (r Redis) del(key string) ?int {
 	message := 'DEL "$key"\r\n'
 	r.socket.write(message) or {
 		return error(err)
 	}
 	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
+}
+
+pub fn (r Redis) rename(key, newkey string) bool {
+	message := 'RENAME "$key" "$newkey"\r\n'
+	r.socket.write(message) or {
+		return false
+	}
+	res := r.socket.read_line()[0..3]
+	match res {
+		'+OK' {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+}
+
+pub fn (r Redis) renamenx(key, newkey string) ?int {
+	message := 'RENAMENX "$key" "$newkey"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	rerr := parse_err(res)
+	if rerr != '' {
+		return error(rerr)
+	}
 	count := parse_int(res)
 	return count
 }
@@ -269,7 +353,7 @@ fn parse_float(res string) f64 {
 
 fn parse_err(res string) string {
 	if res[0..4] == '-ERR' {
-		return res[5..res.len]
+		return res[5..res.len - 2]
 	}
 	return ''
 }

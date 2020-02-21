@@ -346,6 +346,42 @@ fn test_pttl() {
 	assert r3 == -2
 }
 
+fn test_exists() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.exists('test 37') or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.set('test 38', '123') == true
+	r2 := redis.exists('test 38') or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
+fn test_type_of() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.type_of('test 39') or {
+		assert false
+		return
+	}
+	assert r1 == .t_none
+	assert redis.set('test 40', '123') == true
+	r2 := redis.type_of('test 40') or {
+		assert false
+		return
+	}
+	assert r2 == .t_string
+}
+
 fn test_del() {
 	redis := setup()
 	defer {
@@ -358,6 +394,46 @@ fn test_del() {
 	}
 	assert c == 1
 	assert _key_not_found(redis, 'test 4') == true
+}
+
+fn test_rename() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.rename('test 41', 'test 42') == false
+	assert redis.set('test 41', 'will be 42') == true
+	assert redis.rename('test 41', 'test 42') == true
+	r := redis.get('test 42') or {
+		assert false
+		return
+	}
+	assert r == 'will be 42'
+}
+
+fn test_renamenx() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 45', '123') == true
+	assert _renamenx_err_helper(redis, 'test 43', 'test 44') == 'no such key'
+	assert redis.set('test 43', 'will be 44') == true
+	r1 := redis.renamenx('test 43', 'test 44') or {
+		assert false
+		return
+	}
+	assert r1 == 1
+	r2 := redis.get('test 44') or {
+		assert false
+		return
+	}
+	assert r2 == 'will be 44'
+	r3 := redis.renamenx('test 44', 'test 45') or {
+		assert false
+		return
+	}
+	assert r3 == 0
 }
 
 fn test_flushall() {
@@ -380,4 +456,11 @@ fn _key_not_found(redis vredis.Redis, key string) bool {
 		}
 	}
 	return false
+}
+
+fn _renamenx_err_helper(redis vredis.Redis, key, newkey string) string {
+	redis.renamenx(key, newkey) or {
+		return err
+	}
+	return ''
 }

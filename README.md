@@ -11,6 +11,8 @@ To be implemented. There will be some great docs, but only once I get most of th
 ## Features already working
 - GET
 - GETSET
+- EXISTS
+- TYPE
 - TTL
 - PTTL
 - SET
@@ -27,6 +29,8 @@ To be implemented. There will be some great docs, but only once I get most of th
 - EXPIREAT
 - PEXPIREAT
 - DEL
+- RENAME
+- RENAMENX
 - FLUSHALL
 
 ## Installation
