@@ -150,6 +150,15 @@ pub fn (r Redis) incrbyfloat(key string, increment f64) ?f64 {
 	return count
 }
 
+pub fn (r Redis) append(key string, value string) ?int {
+	message := 'APPEND "$key" "$value"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	count := parse_int(r.socket.read_line())
+	return count
+}
+
 pub fn (r Redis) expire(key string, seconds int) ?int {
 	message := 'EXPIRE "$key" $seconds\r\n'
 	r.socket.write(message) or {
@@ -237,6 +246,16 @@ pub fn (r Redis) randomkey() ?string {
 		return error('database is empty')
 	}
 	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) strlen(key string) ?int {
+	message := 'STRLEN "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
 }
 
 pub fn (r Redis) ttl(key string) ?int {

@@ -14,6 +14,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 - RANDOMKEY
 - EXISTS
 - TYPE
+- STRLEN
 - TTL
 - PTTL
 - SET
@@ -23,6 +24,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 - INCR
 - INCRBY
 - INCRBYFLOAT
+- APPEND
 - DECR
 - DECRBY
 - EXPIRE

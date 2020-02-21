@@ -190,6 +190,24 @@ fn test_incrbyfloat() {
 	assert false
 }
 
+fn test_append() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 48', 'bac') == true
+	r1 := redis.append('test 48', 'on') or {
+		assert false
+		return
+	}
+	assert r1 == 5
+	r2 := redis.get('test 48') or {
+		assert false
+		return
+	}
+	assert r2 == 'bacon'
+}
+
 fn test_expire() {
 	redis := setup()
 	defer {
@@ -329,6 +347,24 @@ fn test_randomkey() {
 	}
 	assert r2 == 'test 47'
 	assert _get_key_not_found(redis, 'test 3') == true
+}
+
+fn test_strlen() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 49', 'bacon') == true
+	r1 := redis.strlen('test 49') or {
+		assert false
+		return
+	}
+	assert r1 == 5
+	r2 := redis.strlen('test 50') or {
+		assert false
+		return
+	}
+	assert r2 == 0
 }
 
 fn test_ttl() {
