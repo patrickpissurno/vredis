@@ -20,6 +20,17 @@ fn test_set() {
 	assert redis.set('test', '456') == true
 }
 
+fn test_set_opts() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set_opts('test5', '123', vredis.SetOpts{ ex: 2 }) == true
+	assert redis.set_opts('test5', '456', vredis.SetOpts{ px: 2000, xx: true }) == true
+	assert redis.set_opts('test5', '789', vredis.SetOpts{ px: 1000, nx: true }) == false
+	// assert redis.set_opts('test5', '012', vredis.SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
+}
+
 fn test_get() {
 	redis := setup()
 	defer {
