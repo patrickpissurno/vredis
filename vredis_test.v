@@ -332,7 +332,7 @@ fn test_pttl() {
 		assert false
 		return
 	}
-	assert r1 == 1500
+	assert r1 >= 1490 && r1 <= 1500
 	assert redis.set('test 18', '123') == true
 	r2 := redis.pttl('test 18') or {
 		assert false
