@@ -1,6 +1,6 @@
 # Redis module for V
 
-This module aims to be a full-featured Redis client for V
+This module aims to be a full-featured Redis client for [V](https://vlang.io/)
 
 > The version of this module will remain in `0.x.x` unless the language API's are finalized and implemented.
 
@@ -33,7 +33,13 @@ To be implemented. There will be some great docs, but only once I get most of th
 
 ```
 v up
-v install redis
+v install patrickpissurno.redis
+```
+
+Or if you prefer using `vpkg`:
+
+```
+vpkg get redis
 ```
 
 ## Testing
