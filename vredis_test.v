@@ -276,6 +276,28 @@ fn test_get() {
 	assert _key_not_found(redis, 'test 3') == true
 }
 
+fn test_getset() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.getset('test 36', '10') or {
+		assert false
+		return
+	}
+	assert r1 == ''
+	r2 := redis.getset('test 36', '15') or {
+		assert false
+		return
+	}
+	assert r2 == '10'
+	r3 := redis.get('test 36') or {
+		assert false
+		return
+	}
+	assert r3 == '15'
+}
+
 fn test_ttl() {
 	redis := setup()
 	defer {

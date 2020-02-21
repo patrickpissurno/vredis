@@ -192,6 +192,19 @@ pub fn (r Redis) get(key string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
+pub fn (r Redis) getset(key, value string) ?string {
+	message := 'GETSET "$key" $value\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	len := parse_int(res)
+	if len == -1 {
+		return ''
+	}
+	return r.socket.read_line()[0..len]
+}
+
 pub fn (r Redis) ttl(key string) ?int {
 	message := 'TTL "$key"\r\n'
 	r.socket.write(message) or {
