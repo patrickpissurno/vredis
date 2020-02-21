@@ -90,6 +90,55 @@ pub fn (r Redis) setnx(key string, value string) int {
 	return if res == true { 1 } else { 0 }
 }
 
+pub fn (r Redis) incrby(key string, increment int) ?int {
+	message := 'INCRBY "$key" $increment\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	rerr := parse_err(res)
+	if rerr != '' {
+		return error(rerr)
+	}
+	count := parse_int(res)
+	return count
+}
+
+pub fn (r Redis) incr(key string) ?int {
+	res := r.incrby(key, 1) or {
+		return error(err)
+	}
+	return res
+}
+
+pub fn (r Redis) decr(key string) ?int {
+	res := r.incrby(key, -1) or {
+		return error(err)
+	}
+	return res
+}
+
+pub fn (r Redis) decrby(key string, decrement int) ?int {
+	res := r.incrby(key, -decrement) or {
+		return error(err)
+	}
+	return res
+}
+
+pub fn (r Redis) incrbyfloat(key string, increment f64) ?f64 {
+	message := 'INCRBYFLOAT "$key" $increment\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	rerr := parse_err(r.socket.read_line())
+	if rerr != '' {
+		return error(rerr)
+	}
+	res := r.socket.read_line()
+	count := parse_float(res)
+	return count
+}
+
 pub fn (r Redis) expire(key string, seconds int) ?int {
 	message := 'EXPIRE "$key" $seconds\r\n'
 	r.socket.write(message) or {
@@ -190,12 +239,24 @@ pub fn (r Redis) flushall() bool {
 }
 
 fn parse_int(res string) int {
+	// could probably be written in a more efficient way
 	mut i := 0
 	for ; i < res.len; i++ {
 		if res[i] == `\r` {
 			break
 		}
 	}
-	slen := res[1..i]
-	return strconv.atoi(slen)
+	sval := res[1..i]
+	return strconv.atoi(sval)
+}
+
+fn parse_float(res string) f64 {
+	return strconv.atof64(res)
+}
+
+fn parse_err(res string) string {
+	if res[0..4] == '-ERR' {
+		return res[5..res.len]
+	}
+	return ''
 }

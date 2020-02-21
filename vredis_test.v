@@ -65,6 +65,131 @@ fn test_setnx() {
 	assert redis.setnx('test 8', '456') == 0
 }
 
+fn test_incrby() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 20', '100') == true
+	r1 := redis.incrby('test 20', 4) or {
+		assert false
+		return
+	}
+	assert r1 == 104
+	r2 := redis.incrby('test 21', 2) or {
+		assert false
+		return
+	}
+	assert r2 == 2
+	assert redis.set('test 23', 'nan') == true
+	redis.incrby('test 23', 1) or {
+		assert true
+		return
+	}
+	assert false
+}
+
+fn test_incr() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 24', '100') == true
+	r1 := redis.incr('test 24') or {
+		assert false
+		return
+	}
+	assert r1 == 101
+	r2 := redis.incr('test 25') or {
+		assert false
+		return
+	}
+	assert r2 == 1
+	assert redis.set('test 26', 'nan') == true
+	redis.incr('test 26') or {
+		assert true
+		return
+	}
+	assert false
+}
+
+fn test_decr() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 27', '100') == true
+	r1 := redis.decr('test 27') or {
+		assert false
+		return
+	}
+	assert r1 == 99
+	r2 := redis.decr('test 28') or {
+		assert false
+		return
+	}
+	assert r2 == -1
+	assert redis.set('test 29', 'nan') == true
+	redis.decr('test 29') or {
+		assert true
+		return
+	}
+	assert false
+}
+
+fn test_decrby() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 30', '100') == true
+	r1 := redis.decrby('test 30', 4) or {
+		assert false
+		return
+	}
+	assert r1 == 96
+	r2 := redis.decrby('test 31', 2) or {
+		assert false
+		return
+	}
+	assert r2 == -2
+	assert redis.set('test 32', 'nan') == true
+	redis.decrby('test 32', 1) or {
+		assert true
+		return
+	}
+	assert false
+}
+
+fn test_incrbyfloat() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.set('test 33', '3.1415') == true
+	r1 := redis.incrbyfloat('test 33', 3.1415) or {
+		assert false
+		return
+	}
+	assert r1 == 6.283
+	r2 := redis.incrbyfloat('test 34', 3.14) or {
+		assert false
+		return
+	}
+	assert r2 == 3.14
+	r3 := redis.incrbyfloat('test 34', -3.14) or {
+		assert false
+		return
+	}
+	assert r3 == 0
+	assert redis.set('test 35', 'nan') == true
+	redis.incrbyfloat('test 35', 1.5) or {
+		assert true
+		return
+	}
+	assert false
+}
+
 fn test_expire() {
 	redis := setup()
 	defer {
