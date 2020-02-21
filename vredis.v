@@ -90,13 +90,53 @@ pub fn (r Redis) setnx(key string, value string) int {
 	return if res == true { 1 } else { 0 }
 }
 
+pub fn (r Redis) expire(key string, seconds int) ?int {
+	message := 'EXPIRE "$key" $seconds\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_len(res)
+	return count
+}
+
+pub fn (r Redis) pexpire(key string, millis int) ?int {
+	message := 'PEXPIRE "$key" $millis\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_len(res)
+	return count
+}
+
+pub fn (r Redis) expireat(key string, timestamp int) ?int {
+	message := 'EXPIREAT "$key" $timestamp\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_len(res)
+	return count
+}
+
+pub fn (r Redis) pexpireat(key string, millistimestamp i64) ?int {
+	message := 'PEXPIREAT "$key" $millistimestamp\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_len(res)
+	return count
+}
+
 pub fn (r Redis) get(key string) ?string {
 	message := 'GET "$key"\r\n'
 	r.socket.write(message) or {
 		return error(err)
 	}
-	response := r.socket.read_line()
-	len := parse_len(response)
+	res := r.socket.read_line()
+	len := parse_len(res)
 	if len == -1 {
 		return error('key not found')
 	}
@@ -108,8 +148,8 @@ pub fn (r Redis) del(key string) ?int {
 	r.socket.write(message) or {
 		return error(err)
 	}
-	response := r.socket.read_line()
-	count := parse_len(response)
+	res := r.socket.read_line()
+	count := parse_len(res)
 	return count
 }
 

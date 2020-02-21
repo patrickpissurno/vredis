@@ -65,6 +65,78 @@ fn test_setnx() {
 	assert redis.setnx('test 8', '456') == 0
 }
 
+fn test_expire() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.expire('test 10', 2) or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.set('test 10', '123') == true
+	r2 := redis.expire('test 10', 2) or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
+fn test_pexpire() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.pexpire('test 11', 200) or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.set('test 11', '123') == true
+	r2 := redis.pexpire('test 11', 200) or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
+fn test_expireat() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.expireat('test 12', 1293840000) or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.set('test 12', '123') == true
+	r2 := redis.expireat('test 12', 1293840000) or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
+fn test_pexpireat() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.pexpireat('test 13', 1555555555005) or {
+		assert false
+		return
+	}
+	assert r1 == 0
+	assert redis.set('test 13', '123') == true
+	r2 := redis.pexpireat('test 13', 1555555555005) or {
+		assert false
+		return
+	}
+	assert r2 == 1
+}
+
 fn test_get() {
 	redis := setup()
 	defer {
