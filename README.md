@@ -31,7 +31,10 @@ To be implemented. There will be some great docs, but only once I get most of th
 
 ## Installation
 
-To be implemented (a.k.a., I still need to figure out how to publish to vpm)
+```
+v up
+v install redis
+```
 
 ## Testing
 
