@@ -96,7 +96,7 @@ pub fn (r Redis) expire(key string, seconds int) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	count := parse_len(res)
+	count := parse_int(res)
 	return count
 }
 
@@ -106,7 +106,7 @@ pub fn (r Redis) pexpire(key string, millis int) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	count := parse_len(res)
+	count := parse_int(res)
 	return count
 }
 
@@ -116,7 +116,7 @@ pub fn (r Redis) expireat(key string, timestamp int) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	count := parse_len(res)
+	count := parse_int(res)
 	return count
 }
 
@@ -126,7 +126,7 @@ pub fn (r Redis) pexpireat(key string, millistimestamp i64) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	count := parse_len(res)
+	count := parse_int(res)
 	return count
 }
 
@@ -136,11 +136,31 @@ pub fn (r Redis) get(key string) ?string {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	len := parse_len(res)
+	len := parse_int(res)
 	if len == -1 {
 		return error('key not found')
 	}
 	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) ttl(key string) ?int {
+	message := 'TTL "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
+}
+
+pub fn (r Redis) pttl(key string) ?int {
+	message := 'PTTL "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
 }
 
 pub fn (r Redis) del(key string) ?int {
@@ -149,7 +169,7 @@ pub fn (r Redis) del(key string) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
-	count := parse_len(res)
+	count := parse_int(res)
 	return count
 }
 
@@ -169,7 +189,7 @@ pub fn (r Redis) flushall() bool {
 	}
 }
 
-fn parse_len(res string) int {
+fn parse_int(res string) int {
 	mut i := 0
 	for ; i < res.len; i++ {
 		if res[i] == `\r` {

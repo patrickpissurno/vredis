@@ -151,6 +151,54 @@ fn test_get() {
 	assert _key_not_found(redis, 'test 3') == true
 }
 
+fn test_ttl() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.setex('test 14', 15, '123') == true
+	r1 := redis.ttl('test 14') or {
+		assert false
+		return
+	}
+	assert r1 == 15
+	assert redis.set('test 15', '123') == true
+	r2 := redis.ttl('test 15') or {
+		assert false
+		return
+	}
+	assert r2 == -1
+	r3 := redis.ttl('test 16') or {
+		assert false
+		return
+	}
+	assert r3 == -2
+}
+
+fn test_pttl() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	assert redis.psetex('test 17', 1500, '123') == true
+	r1 := redis.pttl('test 17') or {
+		assert false
+		return
+	}
+	assert r1 == 1500
+	assert redis.set('test 18', '123') == true
+	r2 := redis.pttl('test 18') or {
+		assert false
+		return
+	}
+	assert r2 == -1
+	r3 := redis.pttl('test 19') or {
+		assert false
+		return
+	}
+	assert r3 == -2
+}
+
 fn test_del() {
 	redis := setup()
 	defer {
