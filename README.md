@@ -62,7 +62,9 @@ vpkg get redis
 ## Testing
 Tests are being implemented alongside every feature. This module is being developed with a 100% coverage goal.
 
-Clone the repo and run:
+Every commit triggers Travis CI to build and test this module. Also, tests are automatically run every day against the latest V's source code and Redis' source code.
+
+If you want to run tests manually, be sure to have Redis server running locally at 127.0.0.1:6379. Then clone this repo and run:
 
 ```
 v test .
