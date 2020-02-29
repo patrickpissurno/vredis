@@ -3,7 +3,7 @@ language: c
 compiler:
     - gcc
 before_install:
-    - git clone https://github.com/vlang/v
-    - cd v && make && sudo ./v symlink
+    - git clone https://github.com/vlang/v /tmp/v
+    - cd /tmp/v && make && sudo ./v symlink
 script:
     - ls && v test .
