@@ -1,4 +1,6 @@
 # Redis module for V
+[![build status](https://travis-ci.org/patrickpissurno/vredis.svg?branch=master)](https://travis-ci.org/patrickpissurno/vredis)
+[![license](https://img.shields.io/github/license/patrickpissurno/vredis.svg?maxAge=1800)](https://github.com/patrickpissurno/vredis/blob/master/LICENSE)
 
 This module aims to be a full-featured Redis client for [V](https://vlang.io/)
 
