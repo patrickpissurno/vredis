@@ -4,6 +4,6 @@ compiler:
     - gcc
 before_install:
     - git clone https://github.com/vlang/v /tmp/v
-    - cd /tmp/v && make && sudo ./v symlink
+    - make -C /tmp/v && sudo ./tmp/v symlink
 script:
-    - ls && v test .
+    - v test .
