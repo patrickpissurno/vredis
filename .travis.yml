@@ -3,7 +3,9 @@ language: c
 compiler:
     - gcc
 before_install:
+    - sudo apt-get install tmux
     - git clone https://github.com/vlang/v /tmp/v
     - (cd /tmp/v && make && sudo ./v symlink)
+    - (cd /tmp && wget http://download.redis.io/redis-stable.tar.gz && tar xvzf redis-stable.tar.gz && cd redis-stable && make && sudo cp src/redis-server /usr/local/bin/ && sudo cp src/redis-cli /usr/local/bin/ && tmux new-session -d -s "redis" "redis-server")
 script:
     - v test .
