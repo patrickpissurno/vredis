@@ -1,5 +1,5 @@
-language: c
 os: linux
+language: c
 compiler:
     - gcc
 before_install:
