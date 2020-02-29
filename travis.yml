@@ -1,0 +1,9 @@
+language: c
+os: linux
+compiler:
+    - gcc
+before_install:
+    - git clone https://github.com/vlang/v
+    - cd v && make && sudo ./v symlink
+script:
+    - v test .
