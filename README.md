@@ -18,6 +18,9 @@ To be implemented. There will be some great docs, but only once I get most of th
 - STRLEN
 - TTL
 - PTTL
+- LPOP
+- RPOP
+- LLEN
 - SET
 - SETEX
 - PSETEX
@@ -29,6 +32,8 @@ To be implemented. There will be some great docs, but only once I get most of th
 - SETRANGE
 - DECR
 - DECRBY
+- LPUSH
+- RPUSH
 - EXPIRE
 - PEXPIRE
 - EXPIREAT

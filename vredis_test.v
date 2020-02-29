@@ -208,6 +208,30 @@ fn test_append() {
 	assert r2 == 'bacon'
 }
 
+fn test_lpush() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r := redis.lpush('test 53', 'item 1') or {
+		assert false
+		return
+	}
+	assert r == 1
+}
+
+fn test_rpush() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r := redis.rpush('test 59', 'item 1') or {
+		assert false
+		return
+	}
+	assert r == 1
+}
+
 fn test_setrange() {
 	redis := setup()
 	defer {
@@ -402,6 +426,67 @@ fn test_strlen() {
 	assert r2 == 0
 }
 
+fn test_lpop() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	redis.lpush('test 54', '123') or {
+		assert false
+		return
+	}
+	r1 := redis.lpop('test 54') or {
+		assert false
+		return
+	}
+	assert r1 == '123'
+	assert _lpop_key_not_found(redis, 'test 55') == true
+}
+
+fn test_rpop() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	redis.lpush('test 60', '123') or {
+		assert false
+		return
+	}
+	r1 := redis.rpop('test 60') or {
+		assert false
+		return
+	}
+	assert r1 == '123'
+	assert _rpop_key_not_found(redis, 'test 61') == true
+}
+
+fn test_llen() {
+	redis := setup()
+	defer {
+		cleanup(redis)
+	}
+	r1 := redis.lpush('test 56', '123') or {
+		assert false
+		return
+	}
+	r2 := redis.llen('test 56') or {
+		assert false
+		return
+	}
+	assert r2 == r1
+	r3 := redis.llen('test 57') or {
+		assert false
+		return
+	}
+	assert r3 == 0
+	assert redis.set('test 58', 'not a list') == true
+	redis.llen('test 58') or {
+		assert true
+		return
+	}
+	assert false
+}
+
 fn test_ttl() {
 	redis := setup()
 	defer {
@@ -579,4 +664,28 @@ fn _renamenx_err_helper(redis vredis.Redis, key, newkey string) string {
 		return err
 	}
 	return ''
+}
+
+fn _lpop_key_not_found(redis vredis.Redis, key string) bool {
+	redis.lpop(key) or {
+		if (err == 'key not found') {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+	return false
+}
+
+fn _rpop_key_not_found(redis vredis.Redis, key string) bool {
+	redis.rpop(key) or {
+		if (err == 'key not found') {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+	return false
 }

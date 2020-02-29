@@ -168,6 +168,24 @@ pub fn (r Redis) setrange(key string, offset int, value string) ?int {
 	return count
 }
 
+pub fn (r Redis) lpush(key string, element string) ?int {
+	message := 'LPUSH "$key" "$element"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	count := parse_int(r.socket.read_line())
+	return count
+}
+
+pub fn (r Redis) rpush(key string, element string) ?int {
+	message := 'RPUSH "$key" "$element"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	count := parse_int(r.socket.read_line())
+	return count
+}
+
 pub fn (r Redis) expire(key string, seconds int) ?int {
 	message := 'EXPIRE "$key" $seconds\r\n'
 	r.socket.write(message) or {
@@ -277,6 +295,46 @@ pub fn (r Redis) strlen(key string) ?int {
 		return error(err)
 	}
 	res := r.socket.read_line()
+	count := parse_int(res)
+	return count
+}
+
+pub fn (r Redis) lpop(key string) ?string {
+	message := 'LPOP "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	len := parse_int(res)
+	if len == -1 {
+		return error('key not found')
+	}
+	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) rpop(key string) ?string {
+	message := 'RPOP "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	len := parse_int(res)
+	if len == -1 {
+		return error('key not found')
+	}
+	return r.socket.read_line()[0..len]
+}
+
+pub fn (r Redis) llen(key string) ?int {
+	message := 'LLEN "$key"\r\n'
+	r.socket.write(message) or {
+		return error(err)
+	}
+	res := r.socket.read_line()
+	rerr := parse_err(res)
+	if rerr != '' {
+		return error(rerr)
+	}
 	count := parse_int(res)
 	return count
 }
@@ -410,8 +468,11 @@ fn parse_float(res string) f64 {
 }
 
 fn parse_err(res string) string {
-	if res[0..4] == '-ERR' {
+	if res.len >= 5 && res[0..4] == '-ERR' {
 		return res[5..res.len - 2]
+	}
+	else if res.len >= 11 && res[0..10] == '-WRONGTYPE' {
+		return res[11..res.len - 2]
 	}
 	return ''
 }
