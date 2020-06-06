@@ -398,7 +398,8 @@ pub fn (r Redis) type_of(key string) ?KeyType {
 			KeyType.t_stream
 		}
 		else {
-			.t_unknown}
+			KeyType.t_unknown
+		}
 	}
 }
 
