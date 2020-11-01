@@ -4,8 +4,8 @@ import net
 import strconv
 
 pub struct ConnOpts {
-	port int=6379
-	host string='127.0.0.1'
+	port int = 6379
+	host string = '127.0.0.1'
 }
 
 pub struct Redis {
@@ -13,11 +13,11 @@ pub struct Redis {
 }
 
 pub struct SetOpts {
-	ex       int=-4
-	px       int=-4
-	nx       bool=false
-	xx       bool=false
-	keep_ttl bool=false
+	ex       int = -4
+	px       int = -4
+	nx       bool
+	xx       bool
+	keep_ttl bool
 }
 
 pub enum KeyType {
@@ -47,25 +47,33 @@ pub fn (r Redis) disconnect() {
 	r.socket.close() or { }
 }
 
-pub fn (r Redis) set(key, value string) bool {
+pub fn (r Redis) set(key string, value string) bool {
 	message := 'SET "$key" "$value"\r\n'
 	r.socket.write(message) or {
 		return false
 	}
 	res := r.socket.read_line()[0..3]
 	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
+		'+OK' { return true }
+		else { return false }
 	}
 }
 
-pub fn (r Redis) set_opts(key, value string, opts SetOpts) bool {
-	ex := if opts.ex == -4 && opts.px == -4 { '' } else if opts.ex != -4 { ' EX $opts.ex' } else { ' PX $opts.px' }
-	nx := if opts.nx == false && opts.xx == false { '' } else if opts.nx == true { ' NX' } else { ' XX' }
+pub fn (r Redis) set_opts(key string, value string, opts SetOpts) bool {
+	ex := if opts.ex == -4 && opts.px == -4 {
+		''
+	} else if opts.ex != -4 {
+		' EX $opts.ex'
+	} else {
+		' PX $opts.px'
+	}
+	nx := if opts.nx == false && opts.xx == false {
+		''
+	} else if opts.nx == true {
+		' NX'
+	} else {
+		' XX'
+	}
 	keep_ttl := if opts.keep_ttl == false { '' } else { ' KEEPTTL' }
 	message := 'SET "$key" "$value"$ex$nx$keep_ttl\r\n'
 	r.socket.write(message) or {
@@ -73,12 +81,8 @@ pub fn (r Redis) set_opts(key, value string, opts SetOpts) bool {
 	}
 	res := r.socket.read_line()[0..3]
 	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
+		'+OK' { return true }
+		else { return false }
 	}
 }
 
@@ -98,7 +102,11 @@ pub fn (r Redis) setnx(key string, value string) int {
 	res := r.set_opts(key, value, SetOpts{
 		nx: true
 	})
-	return if res == true { 1 } else { 0 }
+	return if res == true {
+		1
+	} else {
+		0
+	}
 }
 
 pub fn (r Redis) incrby(key string, increment int) ?int {
@@ -249,7 +257,7 @@ pub fn (r Redis) get(key string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) getset(key, value string) ?string {
+pub fn (r Redis) getset(key string, value string) ?string {
 	message := 'GETSET "$key" $value\r\n'
 	r.socket.write(message) or {
 		return error(err)
@@ -262,7 +270,7 @@ pub fn (r Redis) getset(key, value string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) getrange(key string, start, end int) ?string {
+pub fn (r Redis) getrange(key string, start int, end int) ?string {
 	message := 'GETRANGE "$key" $start $end\r\n'
 	r.socket.write(message) or {
 		return error(err)
@@ -376,30 +384,14 @@ pub fn (r Redis) type_of(key string) ?KeyType {
 	}
 	res := r.socket.read_line()
 	return match res[1..res.len - 2] {
-		'none'{
-			KeyType.t_none
-		}
-		'string'{
-			KeyType.t_string
-		}
-		'list'{
-			KeyType.t_list
-		}
-		'set'{
-			KeyType.t_set
-		}
-		'zset'{
-			KeyType.t_zset
-		}
-		'hash'{
-			KeyType.t_hash
-		}
-		'stream'{
-			KeyType.t_stream
-		}
-		else {
-			KeyType.t_unknown
-		}
+		'none' { KeyType.t_none }
+		'string' { KeyType.t_string }
+		'list' { KeyType.t_list }
+		'set' { KeyType.t_set }
+		'zset' { KeyType.t_zset }
+		'hash' { KeyType.t_hash }
+		'stream' { KeyType.t_stream }
+		else { KeyType.t_unknown }
 	}
 }
 
@@ -413,23 +405,19 @@ pub fn (r Redis) del(key string) ?int {
 	return count
 }
 
-pub fn (r Redis) rename(key, newkey string) bool {
+pub fn (r Redis) rename(key string, newkey string) bool {
 	message := 'RENAME "$key" "$newkey"\r\n'
 	r.socket.write(message) or {
 		return false
 	}
 	res := r.socket.read_line()[0..3]
 	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
+		'+OK' { return true }
+		else { return false }
 	}
 }
 
-pub fn (r Redis) renamenx(key, newkey string) ?int {
+pub fn (r Redis) renamenx(key string, newkey string) ?int {
 	message := 'RENAMENX "$key" "$newkey"\r\n'
 	r.socket.write(message) or {
 		return error(err)
@@ -450,12 +438,8 @@ pub fn (r Redis) flushall() bool {
 	}
 	res := r.socket.read_line()[0..3]
 	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
+		'+OK' { return true }
+		else { return false }
 	}
 }
 
@@ -471,8 +455,7 @@ fn parse_float(res string) f64 {
 fn parse_err(res string) string {
 	if res.len >= 5 && res[0..4] == '-ERR' {
 		return res[5..res.len - 2]
-	}
-	else if res.len >= 11 && res[0..10] == '-WRONGTYPE' {
+	} else if res.len >= 11 && res[0..10] == '-WRONGTYPE' {
 		return res[11..res.len - 2]
 	}
 	return ''

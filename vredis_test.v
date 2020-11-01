@@ -640,9 +640,7 @@ fn helper_get_key_not_found(redis vredis.Redis, key string) bool {
 		if err == 'key not found' {
 			return true
 		}
-		else {
-			return false
-		}
+		return false
 	}
 	return false
 }
@@ -652,14 +650,12 @@ fn helper_randomkey_database_empty(redis vredis.Redis) bool {
 		if err == 'database is empty' {
 			return true
 		}
-		else {
-			return false
-		}
+		return false
 	}
 	return false
 }
 
-fn helper_renamenx_err_helper(redis vredis.Redis, key, newkey string) string {
+fn helper_renamenx_err_helper(redis vredis.Redis, key string, newkey string) string {
 	redis.renamenx(key, newkey) or {
 		return err
 	}
@@ -671,9 +667,7 @@ fn helper_lpop_key_not_found(redis vredis.Redis, key string) bool {
 		if err == 'key not found' {
 			return true
 		}
-		else {
-			return false
-		}
+		return false
 	}
 	return false
 }
@@ -683,9 +677,7 @@ fn helper_rpop_key_not_found(redis vredis.Redis, key string) bool {
 		if err == 'key not found' {
 			return true
 		}
-		else {
-			return false
-		}
+		return false
 	}
 	return false
 }
