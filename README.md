@@ -6,6 +6,9 @@ This module aims to be a full-featured Redis client for [V](https://vlang.io/)
 
 > The version of this module will remain in `0.x.x` unless the language API's are finalized and implemented.
 
+#### Disclaimer
+This module is not compatible with the latest V, as there have been a lot of breaking changes. This project **isn't dead**, however I don't have the time required to make it compatible at the moment. Once the V API gets stable, I'll take some time off to do so. In the mean time, feel free to open a PR with the required changes and I'll happily review it and merge it.
+
 ## Docs
 
 To be implemented. There will be some great docs, but only once I get most of the basic stuff sorted out. For the time being I suggest you to take a look at the test files. They'll provide you with enough to get started.
