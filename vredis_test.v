@@ -1,74 +1,74 @@
-import vredis
+module vredis
 
-fn setup() vredis.Redis {
-	redis := vredis.connect(vredis.ConnOpts{}) or {
+fn setup() Redis {
+	redis := connect(ConnOpts{}) or {
 		panic(err)
 	}
 	return redis
 }
 
-fn cleanup(redis vredis.Redis) {
+fn cleanup(mut redis Redis) {
 	redis.flushall()
 	redis.disconnect()
 }
 
 fn test_set() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 0', '123') == true
 	assert redis.set('test 0', '456') == true
 }
 
 fn test_set_opts() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
-	assert redis.set_opts('test 5', '123', vredis.SetOpts{
+	assert redis.set_opts('test 5', '123', SetOpts{
 		ex: 2
 	}) == true
-	assert redis.set_opts('test 5', '456', vredis.SetOpts{
+	assert redis.set_opts('test 5', '456', SetOpts{
 		px: 2000
 		xx: true
 	}) == true
-	assert redis.set_opts('test 5', '789', vredis.SetOpts{
+	assert redis.set_opts('test 5', '789', SetOpts{
 		px: 1000
 		nx: true
 	}) == false
-	// assert redis.set_opts('test 5', '012', vredis.SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
+	// assert redis.set_opts('test 5', '012', SetOpts{ keep_ttl: true }) == true //disabled because I don't have redis >= 6 to test it
 }
 
 fn test_setex() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.setex('test 6', 2, '123') == true
 }
 
 fn test_psetex() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.psetex('test 7', 2000, '123') == true
 }
 
 fn test_setnx() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.setnx('test 8', '123') == 1
 	assert redis.setnx('test 8', '456') == 0
 }
 
 fn test_incrby() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 20', '100') == true
 	r1 := redis.incrby('test 20', 4) or {
@@ -90,9 +90,9 @@ fn test_incrby() {
 }
 
 fn test_incr() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 24', '100') == true
 	r1 := redis.incr('test 24') or {
@@ -114,9 +114,9 @@ fn test_incr() {
 }
 
 fn test_decr() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 27', '100') == true
 	r1 := redis.decr('test 27') or {
@@ -138,9 +138,9 @@ fn test_decr() {
 }
 
 fn test_decrby() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 30', '100') == true
 	r1 := redis.decrby('test 30', 4) or {
@@ -162,9 +162,9 @@ fn test_decrby() {
 }
 
 fn test_incrbyfloat() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 33', '3.1415') == true
 	r1 := redis.incrbyfloat('test 33', 3.1415) or {
@@ -191,9 +191,9 @@ fn test_incrbyfloat() {
 }
 
 fn test_append() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 48', 'bac') == true
 	r1 := redis.append('test 48', 'on') or {
@@ -209,9 +209,9 @@ fn test_append() {
 }
 
 fn test_lpush() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r := redis.lpush('test 53', 'item 1') or {
 		assert false
@@ -221,9 +221,9 @@ fn test_lpush() {
 }
 
 fn test_rpush() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r := redis.rpush('test 59', 'item 1') or {
 		assert false
@@ -233,9 +233,9 @@ fn test_rpush() {
 }
 
 fn test_setrange() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.setrange('test 52', 0, 'bac') or {
 		assert false
@@ -250,9 +250,9 @@ fn test_setrange() {
 }
 
 fn test_expire() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.expire('test 10', 2) or {
 		assert false
@@ -268,9 +268,9 @@ fn test_expire() {
 }
 
 fn test_pexpire() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.pexpire('test 11', 200) or {
 		assert false
@@ -286,9 +286,9 @@ fn test_pexpire() {
 }
 
 fn test_expireat() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.expireat('test 12', 1293840000) or {
 		assert false
@@ -304,9 +304,9 @@ fn test_expireat() {
 }
 
 fn test_pexpireat() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.pexpireat('test 13', 1555555555005) or {
 		assert false
@@ -322,9 +322,9 @@ fn test_pexpireat() {
 }
 
 fn test_persist() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.persist('test 46') or {
 		assert false
@@ -340,9 +340,9 @@ fn test_persist() {
 }
 
 fn test_get() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 2', '123') == true
 	r := redis.get('test 2') or {
@@ -350,13 +350,13 @@ fn test_get() {
 		return
 	}
 	assert r == '123'
-	assert helper_get_key_not_found(redis, 'test 3') == true
+	assert helper_get_key_not_found(mut redis, 'test 3') == true
 }
 
 fn test_getset() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.getset('test 36', '10') or {
 		assert false
@@ -376,9 +376,9 @@ fn test_getset() {
 }
 
 fn test_getrange() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 50', 'community') == true
 	r1 := redis.getrange('test 50', 4, -1) or {
@@ -394,24 +394,24 @@ fn test_getrange() {
 }
 
 fn test_randomkey() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
-	assert helper_randomkey_database_empty(redis) == true
+	assert helper_randomkey_database_empty(mut redis) == true
 	assert redis.set('test 47', '123') == true
 	r2 := redis.randomkey() or {
 		assert false
 		return
 	}
 	assert r2 == 'test 47'
-	assert helper_get_key_not_found(redis, 'test 3') == true
+	assert helper_get_key_not_found(mut redis, 'test 3') == true
 }
 
 fn test_strlen() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 49', 'bacon') == true
 	r1 := redis.strlen('test 49') or {
@@ -427,9 +427,9 @@ fn test_strlen() {
 }
 
 fn test_lpop() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	redis.lpush('test 54', '123') or {
 		assert false
@@ -440,13 +440,13 @@ fn test_lpop() {
 		return
 	}
 	assert r1 == '123'
-	assert helper_lpop_key_not_found(redis, 'test 55') == true
+	assert helper_lpop_key_not_found(mut redis, 'test 55') == true
 }
 
 fn test_rpop() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	redis.lpush('test 60', '123') or {
 		assert false
@@ -457,13 +457,13 @@ fn test_rpop() {
 		return
 	}
 	assert r1 == '123'
-	assert helper_rpop_key_not_found(redis, 'test 61') == true
+	assert helper_rpop_key_not_found(mut redis, 'test 61') == true
 }
 
 fn test_llen() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.lpush('test 56', '123') or {
 		assert false
@@ -488,9 +488,9 @@ fn test_llen() {
 }
 
 fn test_ttl() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.setex('test 14', 15, '123') == true
 	r1 := redis.ttl('test 14') or {
@@ -512,9 +512,9 @@ fn test_ttl() {
 }
 
 fn test_pttl() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.psetex('test 17', 1500, '123') == true
 	r1 := redis.pttl('test 17') or {
@@ -536,9 +536,9 @@ fn test_pttl() {
 }
 
 fn test_exists() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.exists('test 37') or {
 		assert false
@@ -554,9 +554,9 @@ fn test_exists() {
 }
 
 fn test_type_of() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	r1 := redis.type_of('test 39') or {
 		assert false
@@ -572,9 +572,9 @@ fn test_type_of() {
 }
 
 fn test_del() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 4', '123') == true
 	c := redis.del('test 4') or {
@@ -582,13 +582,13 @@ fn test_del() {
 		return
 	}
 	assert c == 1
-	assert helper_get_key_not_found(redis, 'test 4') == true
+	assert helper_get_key_not_found(mut redis, 'test 4') == true
 }
 
 fn test_rename() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.rename('test 41', 'test 42') == false
 	assert redis.set('test 41', 'will be 42') == true
@@ -601,12 +601,12 @@ fn test_rename() {
 }
 
 fn test_renamenx() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 45', '123') == true
-	assert helper_renamenx_err_helper(redis, 'test 43', 'test 44') == 'no such key'
+	assert helper_renamenx_err_helper(mut redis, 'test 43', 'test 44') == 'no such key'
 	assert redis.set('test 43', 'will be 44') == true
 	r1 := redis.renamenx('test 43', 'test 44') or {
 		assert false
@@ -626,18 +626,18 @@ fn test_renamenx() {
 }
 
 fn test_flushall() {
-	redis := setup()
+	mut redis := setup()
 	defer {
-		cleanup(redis)
+		cleanup(mut redis)
 	}
 	assert redis.set('test 9', '123') == true
 	assert redis.flushall() == true
-	assert helper_get_key_not_found(redis, 'test 9') == true
+	assert helper_get_key_not_found(mut redis, 'test 9') == true
 }
 
-fn helper_get_key_not_found(redis vredis.Redis, key string) bool {
+fn helper_get_key_not_found(mut redis Redis, key string) bool {
 	redis.get(key) or {
-		if err == 'key not found' {
+		if err.msg == 'key not found' {
 			return true
 		}
 		else {
@@ -647,9 +647,9 @@ fn helper_get_key_not_found(redis vredis.Redis, key string) bool {
 	return false
 }
 
-fn helper_randomkey_database_empty(redis vredis.Redis) bool {
+fn helper_randomkey_database_empty(mut redis Redis) bool {
 	redis.randomkey() or {
-		if err == 'database is empty' {
+		if err.msg == 'database is empty' {
 			return true
 		}
 		else {
@@ -659,16 +659,16 @@ fn helper_randomkey_database_empty(redis vredis.Redis) bool {
 	return false
 }
 
-fn helper_renamenx_err_helper(redis vredis.Redis, key, newkey string) string {
+fn helper_renamenx_err_helper(mut redis Redis, key string, newkey string) string {
 	redis.renamenx(key, newkey) or {
-		return err
+		return err.msg
 	}
 	return ''
 }
 
-fn helper_lpop_key_not_found(redis vredis.Redis, key string) bool {
+fn helper_lpop_key_not_found(mut redis Redis, key string) bool {
 	redis.lpop(key) or {
-		if err == 'key not found' {
+		if err.msg == 'key not found' {
 			return true
 		}
 		else {
@@ -678,9 +678,9 @@ fn helper_lpop_key_not_found(redis vredis.Redis, key string) bool {
 	return false
 }
 
-fn helper_rpop_key_not_found(redis vredis.Redis, key string) bool {
+fn helper_rpop_key_not_found(mut redis Redis, key string) bool {
 	redis.rpop(key) or {
-		if err == 'key not found' {
+		if err.msg == 'key not found' {
 			return true
 		}
 		else {
