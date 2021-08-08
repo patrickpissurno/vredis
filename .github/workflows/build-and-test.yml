@@ -9,7 +9,7 @@ jobs:
       - name: Setup V
         uses: nocturlab/setup-vlang-action@v1
         with:
-          v-version: latest
+          v-version: master
         id: v
       
       - name: Setup Redis
