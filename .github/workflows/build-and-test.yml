@@ -1,0 +1,23 @@
+name: build-and-test
+on: [push, pull_request]
+jobs:
+ run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup V
+        uses: nocturlab/setup-vlang-action@v1
+        with:
+          v-version: latest
+        id: v
+      
+      - name: Setup Redis
+        uses: supercharge/redis-github-action@1.2.0
+        with:
+          redis-version: 4
+
+      - name: Build
+        run: v .
+      - name: Test
+        run: v test .

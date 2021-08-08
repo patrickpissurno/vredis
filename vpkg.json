@@ -1,6 +1,6 @@
 {
     "name": "redis",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "author": ["patrickpissurno <contato@patrickpissurno.com.br>"],
     "repo": "https://github.com/patrickpissurno/vredis",
     "sources": ["https://vpkg-project.github.io/registry/"],

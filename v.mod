@@ -1,7 +1,7 @@
 Module {
         name: 'redis'
         author: 'patrickpissurno'
-        version: '0.2.1'
+        version: '0.3.0'
         deps: []
         repo_url: 'https://github.com/patrickpissurno/vredis'
         vcs: 'git'
