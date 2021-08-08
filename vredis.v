@@ -4,20 +4,21 @@ import net
 import strconv
 
 pub struct ConnOpts {
-	port int=6379
-	host string='127.0.0.1'
+	port int    = 6379
+	host string = '127.0.0.1'
 }
 
 pub struct Redis {
-	socket net.Socket
+mut:
+	socket net.TcpConn
 }
 
 pub struct SetOpts {
-	ex       int=-4
-	px       int=-4
-	nx       bool=false
-	xx       bool=false
-	keep_ttl bool=false
+	ex       int = -4
+	px       int = -4
+	nx       bool
+	xx       bool
+	keep_ttl bool
 }
 
 pub enum KeyType {
@@ -31,217 +32,150 @@ pub enum KeyType {
 	t_unknown
 }
 
+fn (mut r Redis) redis_transaction(message string) ?string {
+	r.socket.write_string(message)?
+	return r.socket.read_line()
+}
+
 // https://github.com/v-community/learn_v_in_y_minutes/blob/master/learnv.v
 // https://github.com/vlang/v/blob/master/vlib/net/socket_test.v
 // https://redis.io/topics/protocol
 pub fn connect(opts ConnOpts) ?Redis {
-	socket := net.dial(opts.host, opts.port) or {
-		return error(err)
-	}
+	mut socket := net.dial_tcp('$opts.host:$opts.port')?
 	return Redis{
 		socket: socket
 	}
 }
 
-pub fn (r Redis) disconnect() {
-	r.socket.close() or { }
+pub fn (mut r Redis) disconnect() {
+	r.socket.close() or {}
 }
 
-pub fn (r Redis) set(key, value string) bool {
-	message := 'SET "$key" "$value"\r\n'
-	r.socket.write(message) or {
-		return false
-	}
-	res := r.socket.read_line()[0..3]
-	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
-	}
+pub fn (mut r Redis) set(key string, value string) bool {
+	res := r.redis_transaction('SET "$key" "$value"\r\n') or { return false }
+	return res.starts_with('+OK')
 }
 
-pub fn (r Redis) set_opts(key, value string, opts SetOpts) bool {
-	ex := if opts.ex == -4 && opts.px == -4 { '' } else if opts.ex != -4 { ' EX $opts.ex' } else { ' PX $opts.px' }
-	nx := if opts.nx == false && opts.xx == false { '' } else if opts.nx == true { ' NX' } else { ' XX' }
+pub fn (mut r Redis) set_opts(key string, value string, opts SetOpts) bool {
+	ex := if opts.ex == -4 && opts.px == -4 {
+		''
+	} else if opts.ex != -4 {
+		' EX $opts.ex'
+	} else {
+		' PX $opts.px'
+	}
+	nx := if opts.nx == false && opts.xx == false {
+		''
+	} else if opts.nx == true {
+		' NX'
+	} else {
+		' XX'
+	}
 	keep_ttl := if opts.keep_ttl == false { '' } else { ' KEEPTTL' }
-	message := 'SET "$key" "$value"$ex$nx$keep_ttl\r\n'
-	r.socket.write(message) or {
-		return false
-	}
-	res := r.socket.read_line()[0..3]
-	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
-	}
+	res := r.redis_transaction('SET "$key" "$value"$ex$nx$keep_ttl\r\n') or { return false }
+	return res.starts_with('+OK')
 }
 
-pub fn (r Redis) setex(key string, seconds int, value string) bool {
+pub fn (mut r Redis) setex(key string, seconds int, value string) bool {
 	return r.set_opts(key, value, SetOpts{
 		ex: seconds
 	})
 }
 
-pub fn (r Redis) psetex(key string, millis int, value string) bool {
+pub fn (mut r Redis) psetex(key string, millis int, value string) bool {
 	return r.set_opts(key, value, SetOpts{
 		px: millis
 	})
 }
 
-pub fn (r Redis) setnx(key string, value string) int {
+pub fn (mut r Redis) setnx(key string, value string) int {
 	res := r.set_opts(key, value, SetOpts{
 		nx: true
 	})
 	return if res == true { 1 } else { 0 }
 }
 
-pub fn (r Redis) incrby(key string, increment int) ?int {
-	message := 'INCRBY "$key" $increment\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) incrby(key string, increment int) ?int {
+	res := r.redis_transaction('INCRBY "$key" $increment\r\n')?
 	rerr := parse_err(res)
 	if rerr != '' {
 		return error(rerr)
 	}
-	count := parse_int(res)
-	return count
+	return parse_int(res)
 }
 
-pub fn (r Redis) incr(key string) ?int {
-	res := r.incrby(key, 1) or {
-		return error(err)
-	}
+pub fn (mut r Redis) incr(key string) ?int {
+	res := r.incrby(key, 1)?
 	return res
 }
 
-pub fn (r Redis) decr(key string) ?int {
-	res := r.incrby(key, -1) or {
-		return error(err)
-	}
+pub fn (mut r Redis) decr(key string) ?int {
+	res := r.incrby(key, -1)?
 	return res
 }
 
-pub fn (r Redis) decrby(key string, decrement int) ?int {
-	res := r.incrby(key, -decrement) or {
-		return error(err)
-	}
+pub fn (mut r Redis) decrby(key string, decrement int) ?int {
+	res := r.incrby(key, -decrement)?
 	return res
 }
 
-pub fn (r Redis) incrbyfloat(key string, increment f64) ?f64 {
-	message := 'INCRBYFLOAT "$key" $increment\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	rerr := parse_err(r.socket.read_line())
+pub fn (mut r Redis) incrbyfloat(key string, increment f64) ?f64 {
+	mut res := r.redis_transaction('INCRBYFLOAT "$key" $increment\r\n')?
+	rerr := parse_err(res)
 	if rerr != '' {
 		return error(rerr)
 	}
-	res := r.socket.read_line()
-	count := parse_float(res)
-	return count
+	res = r.socket.read_line()
+	return parse_float(res)
 }
 
-pub fn (r Redis) append(key string, value string) ?int {
-	message := 'APPEND "$key" "$value"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	count := parse_int(r.socket.read_line())
-	return count
+pub fn (mut r Redis) append(key string, value string) ?int {
+	res := r.redis_transaction('APPEND "$key" "$value"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) setrange(key string, offset int, value string) ?int {
-	message := 'SETRANGE "$key" $offset "$value"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	count := parse_int(r.socket.read_line())
-	return count
+pub fn (mut r Redis) setrange(key string, offset int, value string) ?int {
+	res := r.redis_transaction('SETRANGE "$key" $offset "$value"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) lpush(key string, element string) ?int {
-	message := 'LPUSH "$key" "$element"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	count := parse_int(r.socket.read_line())
-	return count
+pub fn (mut r Redis) lpush(key string, element string) ?int {
+	res := r.redis_transaction('LPUSH "$key" "$element"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) rpush(key string, element string) ?int {
-	message := 'RPUSH "$key" "$element"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	count := parse_int(r.socket.read_line())
-	return count
+pub fn (mut r Redis) rpush(key string, element string) ?int {
+	res := r.redis_transaction('RPUSH "$key" "$element"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) expire(key string, seconds int) ?int {
-	message := 'EXPIRE "$key" $seconds\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) expire(key string, seconds int) ?int {
+	res := r.redis_transaction('EXPIRE "$key" $seconds\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) pexpire(key string, millis int) ?int {
-	message := 'PEXPIRE "$key" $millis\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) pexpire(key string, millis int) ?int {
+	res := r.redis_transaction('PEXPIRE "$key" $millis\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) expireat(key string, timestamp int) ?int {
-	message := 'EXPIREAT "$key" $timestamp\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) expireat(key string, timestamp int) ?int {
+	res := r.redis_transaction('EXPIREAT "$key" $timestamp\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) pexpireat(key string, millistimestamp i64) ?int {
-	message := 'PEXPIREAT "$key" $millistimestamp\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) pexpireat(key string, millistimestamp i64) ?int {
+	res := r.redis_transaction('PEXPIREAT "$key" $millistimestamp\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) persist(key string) ?int {
-	message := 'PERSIST "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) persist(key string) ?int {
+	res := r.redis_transaction('PERSIST "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) get(key string) ?string {
-	message := 'GET "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) get(key string) ?string {
+	res := r.redis_transaction('GET "$key"\r\n')?
 	len := parse_int(res)
 	if len == -1 {
 		return error('key not found')
@@ -249,12 +183,8 @@ pub fn (r Redis) get(key string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) getset(key, value string) ?string {
-	message := 'GETSET "$key" $value\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) getset(key string, value string) ?string {
+	res := r.redis_transaction('GETSET "$key" $value\r\n')?
 	len := parse_int(res)
 	if len == -1 {
 		return ''
@@ -262,12 +192,8 @@ pub fn (r Redis) getset(key, value string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) getrange(key string, start, end int) ?string {
-	message := 'GETRANGE "$key" $start $end\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) getrange(key string, start int, end int) ?string {
+	res := r.redis_transaction('GETRANGE "$key" $start $end\r\n')?
 	len := parse_int(res)
 	if len == 0 {
 		r.socket.read_line()
@@ -276,12 +202,8 @@ pub fn (r Redis) getrange(key string, start, end int) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) randomkey() ?string {
-	message := 'RANDOMKEY\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) randomkey() ?string {
+	res := r.redis_transaction('RANDOMKEY\r\n')?
 	len := parse_int(res)
 	if len == -1 {
 		return error('database is empty')
@@ -289,22 +211,13 @@ pub fn (r Redis) randomkey() ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) strlen(key string) ?int {
-	message := 'STRLEN "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) strlen(key string) ?int {
+	res := r.redis_transaction('STRLEN "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) lpop(key string) ?string {
-	message := 'LPOP "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) lpop(key string) ?string {
+	res := r.redis_transaction('LPOP "$key"\r\n')?
 	len := parse_int(res)
 	if len == -1 {
 		return error('key not found')
@@ -312,12 +225,8 @@ pub fn (r Redis) lpop(key string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) rpop(key string) ?string {
-	message := 'RPOP "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) rpop(key string) ?string {
+	res := r.redis_transaction('RPOP "$key"\r\n')?
 	len := parse_int(res)
 	if len == -1 {
 		return error('key not found')
@@ -325,143 +234,90 @@ pub fn (r Redis) rpop(key string) ?string {
 	return r.socket.read_line()[0..len]
 }
 
-pub fn (r Redis) llen(key string) ?int {
-	message := 'LLEN "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) llen(key string) ?int {
+	res := r.redis_transaction('LLEN "$key"\r\n')?
 	rerr := parse_err(res)
 	if rerr != '' {
 		return error(rerr)
 	}
-	count := parse_int(res)
-	return count
+	return parse_int(res)
 }
 
-pub fn (r Redis) ttl(key string) ?int {
-	message := 'TTL "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) ttl(key string) ?int {
+	res := r.redis_transaction('TTL "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) pttl(key string) ?int {
-	message := 'PTTL "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) pttl(key string) ?int {
+	res := r.redis_transaction('PTTL "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) exists(key string) ?int {
-	message := 'EXISTS "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) exists(key string) ?int {
+	res := r.redis_transaction('EXISTS "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) type_of(key string) ?KeyType {
-	message := 'TYPE "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	return match res[1..res.len - 2] {
-		'none'{
-			KeyType.t_none
+pub fn (mut r Redis) type_of(key string) ?KeyType {
+	res := r.redis_transaction('TYPE "$key"\r\n')?
+	if res.len > 6 {
+		return match res[1..res.len - 2] {
+			'none' {
+				KeyType.t_none
+			}
+			'string' {
+				KeyType.t_string
+			}
+			'list' {
+				KeyType.t_list
+			}
+			'set' {
+				KeyType.t_set
+			}
+			'zset' {
+				KeyType.t_zset
+			}
+			'hash' {
+				KeyType.t_hash
+			}
+			'stream' {
+				KeyType.t_stream
+			}
+			else {
+				KeyType.t_unknown
+			}
 		}
-		'string'{
-			KeyType.t_string
-		}
-		'list'{
-			KeyType.t_list
-		}
-		'set'{
-			KeyType.t_set
-		}
-		'zset'{
-			KeyType.t_zset
-		}
-		'hash'{
-			KeyType.t_hash
-		}
-		'stream'{
-			KeyType.t_stream
-		}
-		else {
-			KeyType.t_unknown
-		}
+	} else {
+		return KeyType.t_unknown
 	}
 }
 
-pub fn (r Redis) del(key string) ?int {
-	message := 'DEL "$key"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
-	count := parse_int(res)
-	return count
+pub fn (mut r Redis) del(key string) ?int {
+	res := r.redis_transaction('DEL "$key"\r\n')?
+	return parse_int(res)
 }
 
-pub fn (r Redis) rename(key, newkey string) bool {
-	message := 'RENAME "$key" "$newkey"\r\n'
-	r.socket.write(message) or {
-		return false
-	}
-	res := r.socket.read_line()[0..3]
-	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
-	}
+pub fn (mut r Redis) rename(key string, newkey string) bool {
+	res := r.redis_transaction('RENAME "$key" "$newkey"\r\n') or { return false }
+	return res.starts_with('+OK')
 }
 
-pub fn (r Redis) renamenx(key, newkey string) ?int {
-	message := 'RENAMENX "$key" "$newkey"\r\n'
-	r.socket.write(message) or {
-		return error(err)
-	}
-	res := r.socket.read_line()
+pub fn (mut r Redis) renamenx(key string, newkey string) ?int {
+	res := r.redis_transaction('RENAMENX "$key" "$newkey"\r\n')?
 	rerr := parse_err(res)
 	if rerr != '' {
 		return error(rerr)
 	}
-	count := parse_int(res)
-	return count
+	return parse_int(res)
 }
 
-pub fn (r Redis) flushall() bool {
-	message := 'FLUSHALL\r\n'
-	r.socket.write(message) or {
-		return false
-	}
-	res := r.socket.read_line()[0..3]
-	match res {
-		'+OK' {
-			return true
-		}
-		else {
-			return false
-		}
-	}
+pub fn (mut r Redis) flushall() bool {
+	res := r.redis_transaction('FLUSHALL\r\n') or { return false }
+	return res.starts_with('+OK')
 }
 
 fn parse_int(res string) int {
-	sval := res[1..res.len - 2]
-	return strconv.atoi(sval)
+	return if res.len > 1 { res[1..].int() } else { 0 }
 }
 
 fn parse_float(res string) f64 {
@@ -469,10 +325,9 @@ fn parse_float(res string) f64 {
 }
 
 fn parse_err(res string) string {
-	if res.len >= 5 && res[0..4] == '-ERR' {
+	if res.len >= 5 && res.starts_with('-ERR') {
 		return res[5..res.len - 2]
-	}
-	else if res.len >= 11 && res[0..10] == '-WRONGTYPE' {
+	} else if res.len >= 11 && res[0..10] == '-WRONGTYPE' {
 		return res[11..res.len - 2]
 	}
 	return ''
