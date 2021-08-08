@@ -6,16 +6,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup GCC
-        uses: egor-tensin/setup-gcc@v1
-        with:
-          version: latest
-          platform: x64
+      # - name: Setup GCC
+      #   uses: egor-tensin/setup-gcc@v1
+      #   with:
+      #     version: latest
+      #     platform: x64
 
       - name: Setup V
         uses: nocturlab/setup-vlang-action@v1
         with:
-          v-version: master
+          v-version: latest
         id: v
       
       - name: Setup Redis
@@ -25,5 +25,6 @@ jobs:
 
       - name: Build
         run: v -shared .
+        
       - name: Test
         run: v test .
