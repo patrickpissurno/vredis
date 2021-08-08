@@ -6,6 +6,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Setup GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: latest
+          platform: x64
+
       - name: Setup V
         uses: nocturlab/setup-vlang-action@v1
         with:
