@@ -7,26 +7,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Checkout V
-      uses: actions/checkout@v2
-      with:
-        repository: vlang/v
+      - name: Checkout V
+        uses: actions/checkout@v2
+        with:
+          repository: vlang/v
 
-    - name: Checkout VRedis into vlib
-      uses: actions/checkout@v2
-      with:
-        path: vlib/vredis
+      - name: Checkout VRedis into vlib
+        uses: actions/checkout@v2
+        with:
+          path: vlib/vredis
 
-    - name: Build local v
-      run: make -j4
+      - name: Build local v
+        run: make -j4
 
-    - name: Setup Redis
-      uses: supercharge/redis-github-action@1.2.0
-      with:
-        redis-version: 4
+      - name: Setup Redis
+        uses: supercharge/redis-github-action@1.2.0
+        with:
+          redis-version: 4
 
-    - name: Build
-        run: v -shared vlib/vredis
+      - name: Build
+        run: ./v -shared vlib/vredis
 
-    - name: Test
-        run: v test vlib/vredis
+      - name: Test
+        run: ./v test vlib/vredis
