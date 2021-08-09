@@ -12,7 +12,7 @@ jobs:
       with:
         repository: vlang/v
 
-	- name: Checkout VRedis into vlib
+    - name: Checkout VRedis into vlib
       uses: actions/checkout@v2
       with:
         path: vlib/vredis
