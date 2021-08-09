@@ -1,13 +1,15 @@
 # Redis module for V
-[![build status](https://travis-ci.org/patrickpissurno/vredis.svg?branch=master)](https://travis-ci.org/patrickpissurno/vredis)
+[![build status](https://github.com/patrickpissurno/vredis/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/patrickpissurno/vredis/actions/workflows/build-and-test.yml)
 [![license](https://img.shields.io/github/license/patrickpissurno/vredis.svg?maxAge=1800)](https://github.com/patrickpissurno/vredis/blob/master/LICENSE)
 
 This module aims to be a full-featured Redis client for [V](https://vlang.io/)
 
 > The version of this module will remain in `0.x.x` unless the language API's are finalized and implemented.
 
+**Project is now compatible with the latest V version thanks to our new contributors**
+
 #### Disclaimer
-This module is not compatible with the latest V, as there have been a lot of breaking changes. This project **isn't dead**, however I don't have the time required to make it compatible at the moment. Once the V API gets stable, I'll take some time off to do so. In the mean time, feel free to open a PR with the required changes and I'll happily review it and merge it.
+This project **is alive**, and I'm reviewing and merging pull requests as quickly as possible. Feel free to open PRs with improvements: as long as it keeps the code structure similar and passes the tests, it'll get merged. All features should have their own tests. Thanks!
 
 ## Docs
 
@@ -65,9 +67,9 @@ vpkg get redis
 ## Testing
 Tests are being implemented alongside every feature. This module is being developed with a 100% coverage goal.
 
-Every commit triggers Travis CI to build and test this module. Also, tests are automatically run every day against the latest V's source code and Redis' source code.
+Every commit triggers GitHub Actions to build and test this module.
 
-If you want to run tests manually, be sure to have Redis server running locally at 127.0.0.1:6379. Then clone this repo and run:
+If you want to run tests manually, be sure to have a Redis server running locally at 127.0.0.1:6379. Then clone this repo and run:
 
 ```
 v test .
@@ -76,12 +78,14 @@ v test .
 ## Contributors
 
 - [Patrick Pissurno](https://github.com/patrickpissurno) - creator and maintainer
+- [JalonSolov](https://github.com/JalonSolov) - ported to the latest V version
+- [Delyan Angelov](https://github.com/spytheman) - fixed the new CI
 
 ## License
 
 MIT License
 
-Copyright (c) 2020 Patrick Pissurno
+Copyright (c) 2020-2021 Patrick Pissurno
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
