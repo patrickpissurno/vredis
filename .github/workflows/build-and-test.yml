@@ -21,9 +21,9 @@ jobs:
       run: make -j4
 
     - name: Setup Redis
-        uses: supercharge/redis-github-action@1.2.0
-        with:
-          redis-version: 4
+      uses: supercharge/redis-github-action@1.2.0
+      with:
+        redis-version: 4
 
     - name: Build
         run: v -shared vlib/vredis
