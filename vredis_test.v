@@ -1,4 +1,4 @@
-module vredis
+module redis
 
 fn setup() Redis {
 	redis := connect(ConnOpts{}) or {
