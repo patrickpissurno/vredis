@@ -12,6 +12,14 @@ fn cleanup(mut redis Redis) {
 	redis.disconnect()
 }
 
+fn test_auth() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	assert redis.auth('', '') == false
+}
+
 fn test_set() {
 	mut redis := setup()
 	defer {
