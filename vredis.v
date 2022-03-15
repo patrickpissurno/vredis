@@ -325,7 +325,7 @@ fn parse_int(res string) int {
 	return if res.len > 1 { res[1..].int() } else { 0 }
 }
 
-fn parse_float(res string) f64 {
+fn parse_float(res string) ?f64 {
 	return strconv.atof64(res)
 }
 
