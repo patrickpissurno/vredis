@@ -1,9 +1,7 @@
 module vredis
 
 fn setup() Redis {
-	redis := connect(ConnOpts{}) or {
-		panic(err)
-	}
+	redis := connect(ConnOpts{}) or { panic(err) }
 	return redis
 }
 
@@ -637,10 +635,9 @@ fn test_flushall() {
 
 fn helper_get_key_not_found(mut redis Redis, key string) bool {
 	redis.get(key) or {
-		if err.msg == 'key not found' {
+		if err.msg() == 'key not found' {
 			return true
-		}
-		else {
+		} else {
 			return false
 		}
 	}
@@ -649,10 +646,9 @@ fn helper_get_key_not_found(mut redis Redis, key string) bool {
 
 fn helper_randomkey_database_empty(mut redis Redis) bool {
 	redis.randomkey() or {
-		if err.msg == 'database is empty' {
+		if err.msg() == 'database is empty' {
 			return true
-		}
-		else {
+		} else {
 			return false
 		}
 	}
@@ -660,18 +656,15 @@ fn helper_randomkey_database_empty(mut redis Redis) bool {
 }
 
 fn helper_renamenx_err_helper(mut redis Redis, key string, newkey string) string {
-	redis.renamenx(key, newkey) or {
-		return err.msg
-	}
+	redis.renamenx(key, newkey) or { return err.msg() }
 	return ''
 }
 
 fn helper_lpop_key_not_found(mut redis Redis, key string) bool {
 	redis.lpop(key) or {
-		if err.msg == 'key not found' {
+		if err.msg() == 'key not found' {
 			return true
-		}
-		else {
+		} else {
 			return false
 		}
 	}
@@ -680,10 +673,9 @@ fn helper_lpop_key_not_found(mut redis Redis, key string) bool {
 
 fn helper_rpop_key_not_found(mut redis Redis, key string) bool {
 	redis.rpop(key) or {
-		if err.msg == 'key not found' {
+		if err.msg() == 'key not found' {
 			return true
-		}
-		else {
+		} else {
 			return false
 		}
 	}
