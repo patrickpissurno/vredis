@@ -334,3 +334,8 @@ fn parse_err(res string) string {
 	}
 	return ''
 }
+
+pub fn (mut r Redis) ping() bool {
+	res := r.redis_transaction('PING\r\n') or { return false }
+	return res.starts_with('+PONG')
+}

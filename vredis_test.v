@@ -633,6 +633,14 @@ fn test_flushall() {
 	assert helper_get_key_not_found(mut redis, 'test 9') == true
 }
 
+fn test_ping() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	assert redis.ping() == true
+}
+
 fn helper_get_key_not_found(mut redis Redis, key string) bool {
 	redis.get(key) or {
 		if err.msg() == 'key not found' {
