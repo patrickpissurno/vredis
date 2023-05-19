@@ -1,4 +1,4 @@
-module vredis
+module redis
 
 import net
 import strconv
