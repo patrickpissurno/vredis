@@ -51,6 +51,11 @@ pub fn (mut r Redis) disconnect() {
 	r.socket.close() or {}
 }
 
+pub fn (mut r Redis) auth(username string, password string) bool {
+	res := r.redis_transaction('AUTH ${username} "${password}"\r\n') or { return false }
+	return res.starts_with('+OK')
+}
+
 pub fn (mut r Redis) set(key string, value string) bool {
 	res := r.redis_transaction('SET "${key}" "${value}"\r\n') or { return false }
 	return res.starts_with('+OK')
