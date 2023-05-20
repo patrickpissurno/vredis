@@ -13,7 +13,7 @@ This project **is alive**, and I'm reviewing and merging pull requests as quickl
 
 ## Docs
 
-To be implemented. There will be some great docs, but only once I get most of the basic stuff sorted out. For the time being I suggest you to take a look at the test files. They'll provide you with enough to get started.
+To be done. There will be better docs, but only once I get most of the basic stuff sorted out. For the time being I suggest you to take a look at the test files. They'll provide you with enough to get started.
 
 ## Features already working
 - GET
@@ -50,6 +50,7 @@ To be implemented. There will be some great docs, but only once I get most of th
 - RENAME
 - RENAMENX
 - FLUSHALL
+- AUTH
 
 ## Installation
 
@@ -85,7 +86,7 @@ v test .
 
 MIT License
 
-Copyright (c) 2020-2021 Patrick Pissurno
+Copyright (c) 2020-2023 Patrick Pissurno
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
