@@ -649,6 +649,17 @@ fn test_ping() {
 	assert redis.ping() == true
 }
 
+fn test_select() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	assert redis.select_db(0) == true
+	assert redis.select_db(15) == true
+	assert redis.select_db(-1) == false
+	assert redis.select_db(16) == false
+}
+
 fn helper_get_key_not_found(mut redis Redis, key string) bool {
 	redis.get(key) or {
 		if err.msg() == 'key not found' {
