@@ -344,3 +344,9 @@ pub fn (mut r Redis) ping() bool {
 	res := r.redis_transaction('PING\r\n') or { return false }
 	return res.starts_with('+PONG')
 }
+
+// select_db executes a select statement. Note: `select` is a reserved keyword in V.
+pub fn (mut r Redis) select_db(db_number int) bool {
+	res := r.redis_transaction('SELECT ${db_number}\r\n') or { return false }
+	return res.starts_with('+OK')
+}
