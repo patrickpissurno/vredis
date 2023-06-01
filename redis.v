@@ -105,7 +105,12 @@ pub fn (mut pool RedisPool) borrow() !&Redis {
 		}
 	}
 
-	if pool.conns.len < pool.opts.max_conns {
+	mut max_conns := pool.opts.max_conns
+	if max_conns == 0 {
+		max_conns = 10 * runtime.nr_cpus()
+	}
+
+	if pool.conns.len < max_conns {
 		mut conn := connect(pool.opts.conn_opts) or { return err }
 		if pool.opts.password != '' {
 			conn.auth(pool.opts.username, pool.opts.password)
@@ -120,7 +125,7 @@ pub fn (mut pool RedisPool) borrow() !&Redis {
 		return pool.borrow()
 	}
 
-	if pool.conns.len == pool.opts.max_conns {
+	if pool.conns.len == max_conns {
 		// TODO wait for available conn
 	}
 	return error('Failed to borrow a connection from the pool')
