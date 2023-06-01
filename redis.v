@@ -71,7 +71,7 @@ pub fn new_pool(opts PoolOpts) !RedisPool {
 	mut conns_availability := []bool{}
 	mutex := sync.new_mutex()
 	for i := 0; i < start_conns; i++ {
-		conn := connect(opts.conn_opts) or { return err }
+		mut conn := connect(opts.conn_opts) or { return err }
 		if opts.password != '' {
 			conn.auth(opts.username, opts.password)
 		}
@@ -106,7 +106,7 @@ pub fn (mut pool RedisPool) borrow() !&Redis {
 	}
 
 	if pool.conns.len < pool.opts.max_conns {
-		conn := connect(pool.opts.conn_opts) or { return err }
+		mut conn := connect(pool.opts.conn_opts) or { return err }
 		if pool.opts.password != '' {
 			conn.auth(pool.opts.username, pool.opts.password)
 		}
