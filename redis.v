@@ -2,6 +2,8 @@ module redis
 
 import net
 import strconv
+import runtime
+import sync
 
 pub struct ConnOpts {
 	port int    = 6379
@@ -31,6 +33,123 @@ pub enum KeyType {
 	t_stream
 	t_unknown
 }
+
+/*
+* Connection pool
+ * Begin
+*/
+
+pub struct RedisPool {
+	opts PoolOpts
+mut:
+	conns              []Redis
+	conns_availability []bool
+	conns_available    int
+	mutex              sync.Mutex
+}
+
+pub struct PoolOpts {
+	conn_opts ConnOpts
+	min_conns int
+	max_conns int
+	db        int
+	username  string
+	password  string
+}
+
+pub fn new_pool(opts PoolOpts) !RedisPool {
+	if opts.min_conns < 0 {
+		return error('PoolOpts.min_conns must be > 0')
+	}
+
+	mut start_conns := opts.min_conns
+	if start_conns == 0 {
+		start_conns = runtime.nr_cpus()
+	}
+
+	mut redis_pool := []Redis{}
+	mut conns_availability := []bool{}
+	mutex := sync.new_mutex()
+	for i := 0; i < start_conns; i++ {
+		conn := connect(opts.conn_opts) or { return err }
+		if opts.password != '' {
+			conn.auth(opts.username, opts.password)
+		}
+		if opts.db != 0 {
+			conn.select_db(opts.db)
+		}
+		redis_pool << conn
+		conns_availability << true
+	}
+
+	return RedisPool{
+		opts: opts
+		conns: redis_pool
+		conns_availability: conns_availability
+		conns_available: start_conns
+		mutex: mutex
+	}
+}
+
+pub fn (mut pool RedisPool) borrow() !&Redis {
+	// Borrow a connection from the pool
+	pool.mutex.@lock()
+	if pool.conns_available > 0 {
+		for i := 0; i < pool.conns.len; i++ {
+			if pool.conns_availability[i] {
+				pool.conns_availability[i] = false
+				pool.conns_available -= 1
+				pool.mutex.unlock()
+				return &pool.conns[i]
+			}
+		}
+	}
+
+	if pool.conns.len < pool.opts.max_conns {
+		conn := connect(pool.opts.conn_opts) or { return err }
+		if pool.opts.password != '' {
+			conn.auth(pool.opts.username, pool.opts.password)
+		}
+		if pool.opts.db != 0 {
+			conn.select_db(pool.opts.db)
+		}
+		pool.conns << conn
+		pool.conns_availability << true
+		pool.conns_available += 1
+		pool.mutex.unlock()
+		return pool.borrow()
+	}
+
+	if pool.conns.len == pool.opts.max_conns {
+		// TODO wait for available conn
+	}
+	return error('Failed to borrow a connection from the pool')
+}
+
+pub fn (mut pool RedisPool) release(redis_conn &Redis) ! {
+	pool.mutex.@lock()
+	for i := 0; i < pool.conns.len; i++ {
+		if &pool.conns[i] == &redis_conn {
+			pool.conns_availability[i] = true
+			pool.conns_available += 1
+			pool.mutex.unlock()
+			return
+		}
+	}
+	return error('Connection could not be freed')
+	// TODO idle connection life
+}
+
+pub fn (mut pool RedisPool) disconnect() {
+	for i := 0; i < pool.conns.len; i++ {
+		pool.conns[i].disconnect()
+	}
+}
+
+/*
+* Connection pool
+ * End
+*/
 
 fn (mut r Redis) redis_transaction(message string) !string {
 	r.socket.write_string(message)!

@@ -10,6 +10,66 @@ fn cleanup(mut redis Redis) {
 	redis.disconnect()
 }
 
+/*
+* Connection pool
+ * Begin
+*/
+
+fn test_pool_conn() {
+	opts := PoolOpts{
+		// conn_opts: ConnOpts{}
+	}
+	mut pool := new_pool(opts) or { panic(err) }
+	mut conn := pool.borrow() or { panic(err) }
+
+	assert conn.set('test 0', '123') == true
+	assert conn.set('test 2', '123') == true
+	r := conn.get('test 2') or {
+		assert false
+		return
+	}
+	assert r == '123'
+	assert helper_get_key_not_found(mut conn, 'test 3') == true
+
+	conn.flushall()
+	pool.release(conn) or { panic(err) }
+}
+
+fn test_pool_borrow_too_many() {
+	opts := PoolOpts{
+		min_conns: 3
+	}
+	mut pool := new_pool(opts) or { panic(err) }
+	mut conn_1 := pool.borrow() or { panic(err) }
+	mut conn_2 := pool.borrow() or { panic(err) }
+	mut conn_3 := pool.borrow() or { panic(err) }
+	mut conn_4 := pool.borrow() or {
+		assert true
+		return
+	}
+}
+
+fn test_pool_release() {
+	opts := PoolOpts{
+		min_conns: 1
+	}
+	mut pool := new_pool(opts) or { panic(err) }
+	mut conn := pool.borrow() or { panic(err) }
+	pool.release(conn) or { panic(err) }
+	conn = pool.borrow() or { panic(err) }
+	pool.release(conn) or { panic(err) }
+}
+
+fn test_pool_disconnect() {
+	opts := PoolOpts{}
+	mut pool := new_pool(opts) or { panic(err) }
+	pool.disconnect()
+}
+
+/*
+* Connection pool
+ * End
+*/
 fn test_auth() {
 	mut redis := setup()
 	defer {
