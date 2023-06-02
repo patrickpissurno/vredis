@@ -4,6 +4,7 @@ import net
 import strconv
 import runtime
 import sync
+import time
 
 pub struct ConnOpts {
 	port int    = 6379
@@ -46,6 +47,7 @@ mut:
 	conns_availability []bool
 	conns_available    int
 	mutex              sync.Mutex
+	busy               bool
 }
 
 pub struct PoolOpts {
@@ -90,7 +92,6 @@ pub fn new_pool(opts PoolOpts) !RedisPool {
 	}
 }
 
-// borrow returns a pointer to an available Redis struct.
 pub fn (mut pool RedisPool) borrow() !Redis {
 	pool.mutex.@lock()
 	if pool.conns_available > 0 {
@@ -125,22 +126,36 @@ pub fn (mut pool RedisPool) borrow() !Redis {
 	}
 
 	if pool.conns.len == max_conns {
-		// TODO wait for available conn
+		pool.busy = true
+		pool.mutex.unlock()
+		for {
+			pool.mutex.@lock()
+			if pool.busy == false {
+				break
+			}
+			pool.mutex.unlock()
+			time.sleep(100)
+		}
 	}
+
+	pool.mutex.unlock()
 	return error('Failed to borrow a connection from the pool')
 }
 
-// release marks a borrowed Redis struct as available in the RedisPool.
 pub fn (mut pool RedisPool) release(redis_conn Redis) ! {
 	pool.mutex.@lock()
 	for i := 0; i < pool.conns.len; i++ {
 		if pool.conns[i].socket.sock.handle == redis_conn.socket.sock.handle {
 			pool.conns_availability[i] = true
 			pool.conns_available += 1
+			if pool.busy {
+				pool.busy = false
+			}
 			pool.mutex.unlock()
 			return
 		}
 	}
+	pool.mutex.unlock()
 	return error('Connection could not be freed')
 	// TODO idle connection life
 }
