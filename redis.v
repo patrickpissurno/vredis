@@ -134,7 +134,7 @@ pub fn (mut pool RedisPool) borrow() !Redis {
 				break
 			}
 			pool.mutex.unlock()
-			time.sleep(100)
+			time.sleep(100 * time.millisecond)
 		}
 	}
 
