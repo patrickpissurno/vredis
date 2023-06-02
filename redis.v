@@ -36,7 +36,7 @@ pub enum KeyType {
 
 /*
 * Connection pool
- * Begin
+* Begin
 */
 
 pub struct RedisPool {
@@ -69,7 +69,6 @@ pub fn new_pool(opts PoolOpts) !RedisPool {
 
 	mut redis_pool := []Redis{}
 	mut conns_availability := []bool{}
-	mutex := sync.new_mutex()
 	for i := 0; i < start_conns; i++ {
 		mut conn := connect(opts.conn_opts) or { return err }
 		if opts.password != '' {
@@ -87,12 +86,12 @@ pub fn new_pool(opts PoolOpts) !RedisPool {
 		conns: redis_pool
 		conns_availability: conns_availability
 		conns_available: start_conns
-		mutex: mutex
+		mutex: sync.new_mutex()
 	}
 }
 
-pub fn (mut pool RedisPool) borrow() !&Redis {
-	// Borrow a connection from the pool
+// borrow returns a pointer to an available Redis struct.
+pub fn (mut pool RedisPool) borrow() !Redis {
 	pool.mutex.@lock()
 	if pool.conns_available > 0 {
 		for i := 0; i < pool.conns.len; i++ {
@@ -100,7 +99,7 @@ pub fn (mut pool RedisPool) borrow() !&Redis {
 				pool.conns_availability[i] = false
 				pool.conns_available -= 1
 				pool.mutex.unlock()
-				return &pool.conns[i]
+				return pool.conns[i]
 			}
 		}
 	}
@@ -131,10 +130,11 @@ pub fn (mut pool RedisPool) borrow() !&Redis {
 	return error('Failed to borrow a connection from the pool')
 }
 
-pub fn (mut pool RedisPool) release(redis_conn &Redis) ! {
+// release marks a borrowed Redis struct as available in the RedisPool.
+pub fn (mut pool RedisPool) release(redis_conn Redis) ! {
 	pool.mutex.@lock()
 	for i := 0; i < pool.conns.len; i++ {
-		if &pool.conns[i] == &redis_conn {
+		if pool.conns[i].socket.sock.handle == redis_conn.socket.sock.handle {
 			pool.conns_availability[i] = true
 			pool.conns_available += 1
 			pool.mutex.unlock()
@@ -153,7 +153,7 @@ pub fn (mut pool RedisPool) disconnect() {
 
 /*
 * Connection pool
- * End
+* End
 */
 
 fn (mut r Redis) redis_transaction(message string) !string {
