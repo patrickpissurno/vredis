@@ -350,3 +350,16 @@ pub fn (mut r Redis) select_db(db_number int) bool {
 	res := r.redis_transaction('SELECT ${db_number}\r\n') or { return false }
 	return res.starts_with('+OK')
 }
+
+pub fn (mut r Redis) object_idletime(key string) !int {
+	res := r.redis_transaction('OBJECT IDLETIME ${key}\r\n')!
+	if res.starts_with('-ERR') {
+		return error(res)
+	}
+	return parse_int(res)
+}
+
+pub fn (mut r Redis) touch(key string) bool {
+	res := r.redis_transaction('TOUCH ${key}\r\n') or { return false }
+	return res.starts_with('+OK')
+}
