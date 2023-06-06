@@ -34,6 +34,7 @@ To be done. There will be better docs, but only once I get most of the basic stu
 - LLEN
 - LPOP
 - LPUSH
+- OBJECT IDLETIME
 - PERSIST
 - PEXPIRE
 - PEXPIREAT

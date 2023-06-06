@@ -1,5 +1,7 @@
 module redis
 
+import time
+
 fn setup() Redis {
 	redis := connect(ConnOpts{}) or { panic(err) }
 	return redis
@@ -658,6 +660,33 @@ fn test_select() {
 	assert redis.select_db(15) == true
 	assert redis.select_db(-1) == false
 	assert redis.select_db(16) == false
+}
+
+// TODO
+// Use a flag to disable tests relying on test_object_idletime in order to save some testing time.
+// OBJECT IDLETIME returns time elapsed in seconds.
+fn test_object_idletime() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.set('test_idletime', 'sugma')
+	time.sleep(2 * time.second)
+	idletime := redis.object_idletime('test_idletime') or { 69 }
+	assert idletime == 2
+}
+
+fn test_touch() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.set('test_idletime', 'sugma')
+	time.sleep(2 * time.second)
+	redis.touch('test_idletime')
+	time.sleep(1 * time.second)
+	idletime := redis.object_idletime('test_idletime') or { 69 }
+	assert idletime == 1
 }
 
 fn helper_get_key_not_found(mut redis Redis, key string) bool {
