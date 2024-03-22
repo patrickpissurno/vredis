@@ -1,4 +1,4 @@
-module redis
+module vredis
 
 import net
 import strconv
@@ -316,6 +316,35 @@ pub fn (mut r Redis) renamenx(key string, newkey string) !int {
 		return error(rerr)
 	}
 	return parse_int(res)
+}
+
+// Hash
+pub fn (mut r Redis) hset(key string, field string, value string) !int {
+		res := r.redis_transaction('HSET "$key" "$field" "$value"\r\n')!
+		trimmed_response := res.trim_space().replace(':', '')
+		return strconv.atoi(trimmed_response) or { return error('Failed to parse HSET response: $trimmed_response') }
+}
+
+pub fn (mut r Redis) hget(key string, field string) !string {
+    res := r.redis_transaction('HGET "${key}" "${field}"\r\n')!
+    len := parse_int(res)
+    if len == -1 {
+        return error('field not found')
+    }
+    return r.socket.read_line()[0..len]
+}
+
+pub fn (mut r Redis) hdel(key string, field string) !int {
+    res := r.redis_transaction('HDEL "${key}" "${field}"\r\n')!
+		trimmed_response := res.trim_space().replace(':', '')
+    return strconv.atoi(trimmed_response)
+}
+
+pub fn (mut r Redis) hexists(key string, field string) !bool {
+		res := r.redis_transaction('HEXISTS "${key}" "${field}"\r\n')!
+		trimmed_response := res.trim_space().replace(':', '')
+		exists := strconv.atoi(trimmed_response) or { return error('Failed to parse HEXISTS response') }
+		return exists == 1
 }
 
 pub fn (mut r Redis) flushall() bool {

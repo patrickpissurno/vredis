@@ -1,4 +1,4 @@
-module redis
+module vredis
 
 fn setup() Redis {
 	redis := connect(ConnOpts{}) or { panic(err) }
@@ -629,6 +629,73 @@ fn test_renamenx() {
 		return
 	}
 	assert r3 == 0
+}
+
+fn test_hset() {
+    mut redis := setup()
+    defer {
+        cleanup(mut redis)
+    }
+    result := redis.hset('test_hash', 'field', 'value') or {
+        eprintln('Failed to execute hset: $err')
+        assert false
+        return
+    }
+    // Checking if the field was set or already existed; both are valid outcomes for this test
+    assert result == 1 || result == 0
+}
+fn test_hget() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hget: $err')
+		assert false
+		return
+	}
+	value := redis.hget('test_hash', 'field') or {
+		eprintln('Failed to get value for test_hget: $err')
+		assert false
+		return
+	}
+	assert value == 'value'
+}
+
+fn test_hdel() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hdel: $err')
+		assert false
+		return
+	}
+	result := redis.hdel('test_hash', 'field') or {
+		eprintln('Failed to delete field for test_hdel: $err')
+		assert false
+		return
+	}
+	assert result == 1
+}
+
+fn test_hexists() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hexists: $err')
+		assert false
+		return
+	}
+	exists := redis.hexists('test_hash', 'field') or {
+		eprintln('Failed to check existence for test_hexists: $err')
+		assert false
+		return
+	}
+	assert exists
 }
 
 fn test_flushall() {
