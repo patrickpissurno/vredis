@@ -1,4 +1,4 @@
-module vredis
+module redis
 
 fn setup() Redis {
 	redis := connect(ConnOpts{}) or { panic(err) }
@@ -641,7 +641,6 @@ fn test_hset() {
         assert false
         return
     }
-    // Checking if the field was set or already existed; both are valid outcomes for this test
     assert result == 1 || result == 0
 }
 fn test_hget() {
@@ -696,6 +695,31 @@ fn test_hexists() {
 		return
 	}
 	assert exists
+}
+
+fn test_hgetall() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash_getall', 'field1', 'value1') or {
+		eprintln('Failed to set field1 for test_hgetall: $err')
+		assert false
+		return
+	}
+	redis.hset('test_hash_getall', 'field2', 'value2') or {
+		eprintln('Failed to set field2 for test_hgetall: $err')
+		assert false
+		return
+	}
+	all_fields := redis.hgetall('test_hash_getall') or {
+		eprintln('Failed to get all fields for test_hgetall: $err')
+		assert false
+		return
+	}
+	assert all_fields.len == 2
+	assert all_fields['field1'] == 'value1'
+	assert all_fields['field2'] == 'value2'
 }
 
 fn test_flushall() {

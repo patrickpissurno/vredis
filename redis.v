@@ -1,4 +1,4 @@
-module vredis
+module redis
 
 import net
 import strconv
@@ -345,6 +345,61 @@ pub fn (mut r Redis) hexists(key string, field string) !bool {
 		trimmed_response := res.trim_space().replace(':', '')
 		exists := strconv.atoi(trimmed_response) or { return error('Failed to parse HEXISTS response') }
 		return exists == 1
+}
+
+fn (mut r Redis) redis_transaction_multi(message string) !string {
+    r.socket.write_string(message) or { return err }
+
+    mut response := ''
+    // Initial read to get the type and size of the response
+    line := r.socket.read_line()
+    response += line + '\r\n'
+
+    // If the response indicates an array, continue reading the specified number of lines
+    if line.starts_with('*') {
+        // Parse the number of elements expected
+        num_elements := line[1..].int()
+
+        // Read each element of the array
+        for _ in 0 .. num_elements {
+            // Each element consists of a size line followed by the actual data line
+            size_line := r.socket.read_line()
+            data_line := r.socket.read_line()
+            response += size_line + '\r\n' + data_line + '\r\n'
+        }
+    }
+    
+    return response
+}
+
+pub fn (mut r Redis) hgetall(key string) !map[string]string {
+		response := r.redis_transaction_multi('HGETALL "$key"\r\n')!
+		lines := response.split_into_lines()
+		mut result := map[string]string{}
+		mut i := 1
+	
+		for i < lines.len {
+				line := lines[i]
+
+				if line == "" || line.starts_with('$') {
+						i++
+						continue
+				}
+				field := line
+				i++
+
+				for i < lines.len && (lines[i] == "" || lines[i].starts_with('$')) {
+						i++
+				}
+				if i < lines.len {
+						value := lines[i]
+						result[field] = value
+				}
+
+			i++
+		}
+
+		return result
 }
 
 pub fn (mut r Redis) flushall() bool {
