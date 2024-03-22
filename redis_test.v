@@ -631,6 +631,97 @@ fn test_renamenx() {
 	assert r3 == 0
 }
 
+fn test_hset() {
+    mut redis := setup()
+    defer {
+        cleanup(mut redis)
+    }
+    result := redis.hset('test_hash', 'field', 'value') or {
+        eprintln('Failed to execute hset: $err')
+        assert false
+        return
+    }
+    assert result == 1 || result == 0
+}
+fn test_hget() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hget: $err')
+		assert false
+		return
+	}
+	value := redis.hget('test_hash', 'field') or {
+		eprintln('Failed to get value for test_hget: $err')
+		assert false
+		return
+	}
+	assert value == 'value'
+}
+
+fn test_hdel() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hdel: $err')
+		assert false
+		return
+	}
+	result := redis.hdel('test_hash', 'field') or {
+		eprintln('Failed to delete field for test_hdel: $err')
+		assert false
+		return
+	}
+	assert result == 1
+}
+
+fn test_hexists() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash', 'field', 'value') or {
+		eprintln('Failed to set value for test_hexists: $err')
+		assert false
+		return
+	}
+	exists := redis.hexists('test_hash', 'field') or {
+		eprintln('Failed to check existence for test_hexists: $err')
+		assert false
+		return
+	}
+	assert exists
+}
+
+fn test_hgetall() {
+	mut redis := setup()
+	defer {
+		cleanup(mut redis)
+	}
+	redis.hset('test_hash_getall', 'field1', 'value1') or {
+		eprintln('Failed to set field1 for test_hgetall: $err')
+		assert false
+		return
+	}
+	redis.hset('test_hash_getall', 'field2', 'value2') or {
+		eprintln('Failed to set field2 for test_hgetall: $err')
+		assert false
+		return
+	}
+	all_fields := redis.hgetall('test_hash_getall') or {
+		eprintln('Failed to get all fields for test_hgetall: $err')
+		assert false
+		return
+	}
+	assert all_fields.len == 2
+	assert all_fields['field1'] == 'value1'
+	assert all_fields['field2'] == 'value2'
+}
+
 fn test_flushall() {
 	mut redis := setup()
 	defer {
